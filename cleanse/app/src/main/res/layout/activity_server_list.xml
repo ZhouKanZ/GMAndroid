@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.jms.cleanse.ServerListActivity">
+
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar_server_list"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@color/colorPrimary"
+        app:contentInsetStart="0dp"
+        >
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/server_list"
+            android:textColor="#ffffff"
+            android:textSize="20sp" />
+
+
+    </android.support.v7.widget.Toolbar>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/server_info_rv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar_server_list"
+        android:layout_marginTop="7dp"
+        >
+
+    </android.support.v7.widget.RecyclerView>
+
+</RelativeLayout>

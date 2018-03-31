@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/colorPrimary">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/pop_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        app:contentInsetStart="21dp"
+
+        >
+
+        <TextView
+            android:id="@+id/tv_map_select_notice"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/map_select"
+            android:gravity="center_vertical"
+            android:textSize="@dimen/text_size_18sp"
+            android:textColor="@color/colorToolbarTitle"
+            />
+
+    </android.support.v7.widget.Toolbar>
+    
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/map_rv"
+        android:layout_width="match_parent"
+        android:layout_height="195dp"
+        android:layout_below="@+id/pop_toolbar"
+        android:paddingTop="36dp"
+        android:paddingBottom="22dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        >
+
+    </android.support.v7.widget.RecyclerView>
+
+
+
+
+
+</RelativeLayout>

@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">cleanse</string>
+    <string name="login">登陆</string>
+    <string name="server_list">服务器列表</string>
+    <string name="name_notice">名称：</string>
+    <string name="ip_notice">IP地址：</string>
+    <string name="current_location">当前场景：大厅</string>
+    <string name="NA">N/A</string>
+    <string name="manualMode">手动模式</string>
+    <string name="automaticMode">自动模式</string>
+    <string name="notice_switch_upper_computer">上位机开关:</string>
+    <string name="map_select">地图选择</string>
+    <string name="task">任务</string>
+    <string name="start_task">开始路径</string>
+    <string name="empty_notice">账号或密码不可以为空</string>
+    <string name="error_login">用户名或密码错误请重新输入</string>
+</resources>

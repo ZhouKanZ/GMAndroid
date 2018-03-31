@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- login -->
+    <dimen name="login_logo_marginTop">22dp</dimen>
+    <dimen name="user_input_height">328dp</dimen>
+    <dimen name="user_input_marginLeft">32dp</dimen>
+    <dimen name="user_input_marginRight">32dp</dimen>
+    <dimen name="user_input_marginTop">21.5dp</dimen>
+    <dimen name="user_input_card_radius">10dp</dimen>
+    <dimen name="user_input_card_elevation">7dp</dimen>
+    <dimen name="user_input_content_marginTop">83dp</dimen>
+    <dimen name="user_input_content_paddingLeft">20dp</dimen>
+    <dimen name="user_input_content_paddingRight">20dp</dimen>
+    <dimen name="user_info_edit_height">40dp</dimen>
+    <dimen name="user_info_edit_paddingLeft">20dp</dimen>
+    <dimen name="user_info_edit_paddingRight">10dp</dimen>
+
+    <!-- line -->
+    <dimen name="line_width">1dp</dimen>
+    <dimen name="line_height">22dp</dimen>
+
+    <!-- toolbar line -->
+    <dimen name="toolbar_line_width">2dp</dimen>
+    <dimen name="toolbar_line_height">25dp</dimen>
+
+    <!-- commond text_size -->
+    <dimen name="text_size_8sp">8sp</dimen>
+    <dimen name="text_size_9sp">9sp</dimen>
+    <dimen name="text_size_12sp">12sp</dimen>
+    <dimen name="text_size_15sp">15sp</dimen>
+    <dimen name="text_size_18sp">18sp</dimen>
+
+
+</resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#2ecfec</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <!-- TextColor -->
+    <color name="colorTextNotice">#969696</color>
+    <color name="colorTextModel">#787878</color>
+    <color name="colorTextSelected">#f1781a</color>
+    <color name="colorTextTitle">#5d5d5d</color>
+    <color name="colorTextContentTitle">#aaaaaa</color>
+    <color name="colorToolbarTitle">@android:color/white</color>
+    <color name="colorTextContentMain">#616161</color>
+
+
+    <!-- commond color -->
+    <color name="colorInputDiviLine">#969696</color>
+    <color name="colorButtonAndBound">#2ec3d5</color>
+    <color name="colorItemBackground">@android:color/white</color>
+    <color name="colorItemBackgroundSelected">#ebebeb</color>
+    <color name="colorDiviLine">#e5e5e5</color>
+    <color name="colorButtonInsidePopup">#24ade6</color>
+    <color name="colorSelected">#f1781a</color>
+    <color name="colorNaviPointBackground">@color/colorPrimary</color>
+    <color name="colorButtonPressed">#11b9ff</color>
+    <color name="colorButtonLocked">#cdcdcd</color>
+    <color name="colorListBackground">#f6f6f6</color>
+
+
+    <!-- custom view -->
+    <color name="colorPathCleanse">@color/colorTextSelected</color>
+    <color name="colorPathUnCleanse">#8c8d8d</color>
+
+
+</resources>

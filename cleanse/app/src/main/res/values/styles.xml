@@ -1,0 +1,70 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="user_input_layout_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/user_info_edit_height</item>
+        <item name="android:background">@drawable/input_et_backgroud</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">@dimen/user_info_edit_paddingLeft</item>
+        <item name="android:paddingRight">@dimen/user_info_edit_paddingRight</item>
+
+    </style>
+
+    <style name="user_input_notice_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/colorTextNotice</item>
+        <item name="android:textSize">@dimen/text_size_18sp</item>
+
+    </style>
+
+    <style name="user_input_layout_vertical_line_style">
+        <item name="android:layout_width">@dimen/line_width</item>
+        <item name="android:layout_height">@dimen/line_height</item>
+        <item name="android:background">@color/colorInputDiviLine</item>
+    </style>
+
+    <style name="toolbar_line_style">
+        <item name="android:layout_width">@dimen/toolbar_line_width</item>
+        <item name="android:layout_height">@dimen/toolbar_line_height</item>
+        <item name="android:background">@color/colorToolbarTitle</item>
+    </style>
+
+    <style name="user_input_layout_edit_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">22dp</item>
+        <item name="android:layout_marginLeft">9dp</item>
+        <item name="android:background">@null</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="login_btn_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_marginLeft">45dp</item>
+        <item name="android:layout_marginRight">45dp</item>
+        <item name="android:layout_marginTop">67dp</item>
+        <item name="android:background">@drawable/login_btn_background_selector</item>
+        <item name="android:text">@string/login</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">@dimen/text_size_18sp</item>
+
+    </style>
+
+    <style name="popup_anim_mapselector">
+
+        <item name="android:windowEnterAnimation">@anim/popup_push_in</item>
+        <item name="android:windowExitAnimation">@anim/popup_exit_out</item>
+
+    </style>
+
+</resources>
