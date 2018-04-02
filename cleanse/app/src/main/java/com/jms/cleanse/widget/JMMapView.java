@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
@@ -19,13 +20,16 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 
+import com.alexvasilkov.gestures.GestureController;
+import com.alexvasilkov.gestures.State;
+import com.alexvasilkov.gestures.animation.ViewPositionAnimator;
+import com.alexvasilkov.gestures.views.interfaces.AnimatorView;
+import com.alexvasilkov.gestures.views.interfaces.GestureView;
 import com.jms.cleanse.widget.mapview.POIConfig;
 import com.jms.cleanse.widget.mapview.ScaleUtils;
 import com.jms.cleanse.widget.mapview.TestPOI;
 
-import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,9 +40,12 @@ import java.util.List;
  * @desc: 绘制POI / 绘制路径  /
  */
 
-public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
+public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Runnable, GestureView, AnimatorView {
 
     private static final String TAG = "JMMapView";
+    private final GestureController controller;
+    private ViewPositionAnimator positionAnimator;
+
 
     private Paint mPaint;
     private Canvas canvas;
@@ -61,11 +68,34 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     private int colorUnCleanse;
     // 地图
     private Bitmap map;
-
     private Resources resources;
+
+    /* 矩阵变换 */
+    private float scale = 1.0f;
+    private float dx = 0;
+    private float dy = 0;
+
+    float tranX;
+    float tranY;
+
 
     /* 事件 */
     private OnClickListener onClickListener;
+
+    private Matrix changeMatrix = new Matrix();
+
+    @Override
+    public GestureController getController() {
+        return controller;
+    }
+
+    @Override
+    public ViewPositionAnimator getPositionAnimator() {
+        if (positionAnimator == null) {
+            positionAnimator = new ViewPositionAnimator(this);
+        }
+        return positionAnimator;
+    }
 
     public interface OnClickListener {
         void onPointClick(TestPOI poi, int pos);
@@ -95,6 +125,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         holder = getHolder();
         holder.addCallback(this);
         holder.setFormat(PixelFormat.TRANSPARENT);
+//        this.setSurfaceTextureListener(this);
 
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setColor(Color.BLUE);
@@ -115,6 +146,37 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         colorCleanse = ContextCompat.getColor(this.getContext(), POIConfig.pathColorCleanse);
         colorUnCleanse = ContextCompat.getColor(this.getContext(), POIConfig.pathColorUnCleanse);
 
+        /* make jmmapview support gesture */
+        controller = new GestureController(this);
+        controller.getSettings()
+//                .setRotationEnabled(true)
+                .disableBounds()
+                .setMaxZoom((float) 1.5);
+
+        controller.addOnStateChangeListener(new GestureController.OnStateChangeListener() {
+            @Override
+            public void onStateChanged(State state) {
+                applyState(state);
+            }
+
+            @Override
+            public void onStateReset(State oldState, State newState) {
+                applyState(newState);
+            }
+        });
+
+
+    }
+
+    /**
+     * @param state
+     */
+    private void applyState(State state) {
+        state.get(changeMatrix);
+        dx = state.getX();
+        dy = state.getY();
+        scale = state.getZoom();
+        invalidate();
     }
 
     @Override
@@ -135,7 +197,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
     @Override
     public void run() {
-        if (isDrawing) {
+        while (isDrawing) {
             drawMap();
         }
     }
@@ -162,7 +224,6 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         } catch (Exception e) {
             e.getStackTrace();
         } finally {
-
             if (null != canvas) {
                 holder.unlockCanvasAndPost(canvas);
             }
@@ -180,18 +241,23 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             float dw = getWidth() - map.getWidth() * ratio;
             // 高的差值
             float dh = getHeight() - map.getHeight() * ratio;
+
+            tranX = dw / (2 * ratio);
+            tranY = dh / (2 * ratio);
+
+            /** set canvas matrix **/
+            canvas.setMatrix(changeMatrix);
             canvas.scale(ratio, ratio);
             // 横屏
             if (getWidth() > getHeight()) {
-                canvas.translate(dw / (2 * ratio), 0);
+                canvas.translate(tranX, 0);
                 // 竖屏
             } else {
-                canvas.translate(0, dh / (2 * ratio));
+                canvas.translate(0, tranY);
             }
             // 计算坐标系的最大值
             coodinateX = map.getWidth();
             coodinateY = map.getHeight();
-            Log.d(TAG, "canvasChange: " + coodinateX + ",y" + coodinateY);
         } else {
             return false;
         }
@@ -226,13 +292,8 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
             /* 绘制起点和终点 */
             if (i == 0) {
-//                canvas.drawBitmap(pathStartRes,null,getBitmapRectF(poiPoint.getAx(),poiPoint.getAy(),pathStartRes),mPaint);
                 canvas.drawBitmap(pathStartRes, (float) (poiPoint.getAx() - pathStartRes.getWidth() / 2), (float) (poiPoint.getAy() - pathStartRes.getHeight()), mPaint);
-//                canvas.drawRect(getBitmapRectF(poiPoint.getAx(),poiPoint.getAy(),pathEndRes),mPaint);
             } else if (i > 0 && i == testPOIS.size() - 1) {
-//                canvas.drawBitmap(pathStartRes,null,getBitmapRectF(poiPoint.getAx(),poiPoint.getAy(),pathStartRes),mPaint);
-//                mPaint.setColor(Color.BLUE);
-//                canvas.drawRect(getBitmapRectF(poiPoint.getAx(),poiPoint.getAy(),pathEndRes),mPaint);
                 canvas.drawBitmap(pathEndRes, (float) (poiPoint.getAx() - pathEndRes.getWidth() / 2), (float) (poiPoint.getAy() - pathEndRes.getHeight()), mPaint);
             }
         }
@@ -314,18 +375,26 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         float x = event.getX();
         float y = event.getY();
 
+
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // 点被点击
-                Log.d(TAG, "onTouchEvent: 我被点了" + x+",y"+y);
-                for (int i = 0; i <points.size() ; i++) {
-                    if (onClickListener!=null){
-                        if (points.get(i).contains(x,y)){
-                            onClickListener.onPointClick(testPOIS.get(i),i);
-                            Log.d(TAG, "onTouchEvent: " + i+"我被点了");
+                /*float[] point = new float[2];
+                point[0] = (x-tranX-dx)/scale;
+                point[1] = (y-tranY-dy)/scale;
+
+                Log.d(TAG, "onTouchEvent: origin point :x" + x+",y:"+y);
+                Log.d(TAG, "onTouchEvent: transfrom point:x"+point[0]+",y:"+point[1]);
+
+                for (int i = 0; i < points.size(); i++) {
+                    if (onClickListener != null) {
+                        if (points.get(i).contains(point[0], point[1])) {
+                            onClickListener.onPointClick(testPOIS.get(i), i);
+                            Log.d(TAG, "onTouchEvent: " + i + "我被点了");
+                            break;
                         }
                     }
-                }
+                }*/
                 break;
             case MotionEvent.ACTION_UP:
                 break;
@@ -335,7 +404,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
                 break;
         }
 
-        return super.onTouchEvent(event);
+        return controller.onTouch(this, event);
     }
 
     /**

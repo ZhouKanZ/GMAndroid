@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.jms.cleanse.widget.JMMapView;
+import com.jms.cleanse.widget.MySurfaceView3;
 import com.jms.cleanse.widget.POIPoint;
 import com.jms.cleanse.widget.mapview.TestPOI;
 
@@ -27,6 +28,11 @@ public class UItestActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_uitest);
+
+//        MySurfaceView3 sfv = findViewById(R.id.sfv);
+//        @SuppressLint("ResourceType") InputStream is = getResources().openRawResource(R.drawable.map_test);
+//        Bitmap bitmap = BitmapFactory.decodeStream(is);
+//        sfv.setBitmap(bitmap);
 
         mapView = findViewById(R.id.map_view);
 
