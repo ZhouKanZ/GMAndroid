@@ -31,8 +31,13 @@ import com.jms.cleanse.widget.mapview.ScaleUtils;
 import com.jms.cleanse.widget.mapview.TestPOI;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by zhoukan on 2018/3/28.
@@ -45,7 +50,11 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     private static final String TAG = "JMMapView";
     private final GestureController controller;
     private ViewPositionAnimator positionAnimator;
+    private static final int MAX_CLICK_DURATION = 200;
+    private long startClickTime;
 
+    // 刷新频率
+    public static final int TIME_IN_FRAME = 30;
 
     private Paint mPaint;
     private Canvas canvas;
@@ -72,8 +81,10 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
     /* 矩阵变换 */
     private float scale = 1.0f;
+    private float ratio = 1.0f;
     private float dx = 0;
     private float dy = 0;
+    int index = -1;
 
     float tranX;
     float tranY;
@@ -198,7 +209,16 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     @Override
     public void run() {
         while (isDrawing) {
+
+            long startTime = System.currentTimeMillis();
             drawMap();
+            long endTime = System.currentTimeMillis();
+            int diffTime = (int) (endTime - startTime);
+            while (diffTime <= TIME_IN_FRAME) {
+                diffTime = (int) (System.currentTimeMillis() - startTime);
+                Thread.yield();
+            }
+
         }
     }
 
@@ -207,25 +227,26 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
      */
     private void drawMap() {
 
-        try {
-            if (null != holder) {
-                canvas = holder.lockCanvas();
-                canvas.save();
-                if (!canvasChange()) {
-                    return;
+        synchronized (holder) {
+            try {
+                if (null != holder) {
+                    canvas = holder.lockCanvas();
+                    canvas.save();
+                    if (!canvasChange()) {
+                        return;
+                    }
+                    canvas.drawColor(Color.WHITE);
+                    drawBitMap();
+                    drawPath();
+                    drawPoi();
+                    canvas.restore();
                 }
-                canvas.drawColor(Color.WHITE);
-
-                drawBitMap();
-                drawPath();
-                drawPoi();
-                canvas.restore();
-            }
-        } catch (Exception e) {
-            e.getStackTrace();
-        } finally {
-            if (null != canvas) {
-                holder.unlockCanvasAndPost(canvas);
+            } catch (Exception e) {
+                e.getStackTrace();
+            } finally {
+                if (null != canvas) {
+                    holder.unlockCanvasAndPost(canvas);
+                }
             }
         }
     }
@@ -235,26 +256,27 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
      */
     private boolean canvasChange() {
         if (map != null) {
-            // 缩放倍数
-            float ratio = ScaleUtils.getScaleRatio(ScaleUtils.ScaleType.CENTER_INSIDE, map, getWidth(), getHeight());
+            // 缩放倍数  只用计算一次
+            ratio = ScaleUtils.getScaleRatio(ScaleUtils.ScaleType.CENTER_INSIDE, map, getWidth(), getHeight());
             // 宽的差值
             float dw = getWidth() - map.getWidth() * ratio;
             // 高的差值
             float dh = getHeight() - map.getHeight() * ratio;
-
-            tranX = dw / (2 * ratio);
-            tranY = dh / (2 * ratio);
-
+            Log.d(TAG, "canvasChange: " + scale);
             /** set canvas matrix **/
             canvas.setMatrix(changeMatrix);
             canvas.scale(ratio, ratio);
             // 横屏
             if (getWidth() > getHeight()) {
-                canvas.translate(tranX, 0);
+                tranX = dw / (2 * ratio); // 此时的canvas的坐标系已经发生更改,所以在移动canvas的过程中必须除以缩放倍数 （ps：关键点）
+                tranY = 0;
                 // 竖屏
             } else {
-                canvas.translate(0, tranY);
+                tranY = dh / (2 * ratio);
+                tranX = 0;
             }
+            Log.d(TAG, "canvasChange: " + tranX + "tranY" + tranY);
+            canvas.translate(tranX, tranY);
             // 计算坐标系的最大值
             coodinateX = map.getWidth();
             coodinateY = map.getHeight();
@@ -374,29 +396,33 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
         float x = event.getX();
         float y = event.getY();
-
-
-
+        float[] point = new float[2];
+        index = -1;
+        point[0] = (x - tranX * ratio) / (ratio);
+        point[1] = (y - tranY * ratio) / ratio;
+        Log.d(TAG, "onTouchEvent: origin point :x" + x + ",y:" + y);
+        Log.d(TAG, "onTouchEvent: transfrom point:x" + point[0] + ",y:" + point[1]);
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                /*float[] point = new float[2];
-                point[0] = (x-tranX-dx)/scale;
-                point[1] = (y-tranY-dy)/scale;
-
-                Log.d(TAG, "onTouchEvent: origin point :x" + x+",y:"+y);
-                Log.d(TAG, "onTouchEvent: transfrom point:x"+point[0]+",y:"+point[1]);
-
-                for (int i = 0; i < points.size(); i++) {
-                    if (onClickListener != null) {
-                        if (points.get(i).contains(point[0], point[1])) {
-                            onClickListener.onPointClick(testPOIS.get(i), i);
-                            Log.d(TAG, "onTouchEvent: " + i + "我被点了");
-                            break;
-                        }
-                    }
-                }*/
+                startClickTime = Calendar.getInstance().getTimeInMillis();
                 break;
             case MotionEvent.ACTION_UP:
+                long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
+                if (clickDuration < MAX_CLICK_DURATION) {
+                    if (onClickListener != null) {
+                        Observable.fromIterable(points)
+                                .filter(rectF -> rectF.contains(point[0], point[1]))
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(rectF -> {
+                                            Log.d(TAG, "onTouchEvent: xxxxx");
+                                            onClickListener.onPointClick(testPOIS.get(0), index);
+                                        }
+                                        , t -> {
+                                        }
+                                );
+                    }
+                }
                 break;
             case MotionEvent.ACTION_CANCEL:
                 break;

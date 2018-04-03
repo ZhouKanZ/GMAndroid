@@ -3,6 +3,7 @@ package com.jms.cleanse.widget.mapview;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.util.Log;
 
 /**
  * Created by zhoukan on 2018/3/30.
@@ -32,6 +33,7 @@ public class ScaleUtils {
                 int originH = bitmap.getHeight();
                 float wRatio = (float) ((w * 1.0 )/ originW);
                 float hRatio = (float) ((h * 1.0 )/ originH);
+                Log.d("tag", "getScaleRatio: w" + wRatio+"hr"+hRatio + "view W:"+w+",view H:"+h);
                 return Math.min(wRatio,hRatio);
         }
         return 0;

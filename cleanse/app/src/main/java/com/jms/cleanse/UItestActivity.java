@@ -46,7 +46,6 @@ public class UItestActivity extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeStream(is);
         mapView.setMap(bitmap);
         mapView.setTestPOIS(testPOIS);
-
         mapView.setOnClickListener(new JMMapView.OnClickListener() {
             @Override
             public void onPointClick(TestPOI poi, int pos) {
