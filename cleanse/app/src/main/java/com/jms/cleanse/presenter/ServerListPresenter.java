@@ -2,6 +2,8 @@ package com.jms.cleanse.presenter;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -62,14 +64,13 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
     }
 
 
-
     /**
      * 实例化数据
      */
     @Override
     public void initData() {
         configuration();//配置页面
-        configuredView();//配置地图控件
+//        configuredView();//配置地图控件
 
         TCP_CONN.reconnTime = 5000;               //重连时间(不设置默认5000ms,上层可更改,建议3000ms以上).
     }
@@ -138,12 +139,9 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
 
     //开启UDP
     public void startUDP() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                TCP_CONN.isUDP = false;
-                TCP_CONN.getUDPs();
-            }
+        new Thread(() -> {
+            TCP_CONN.isUDP = false;
+            TCP_CONN.getUDPs();
         }).start();
     }
 
@@ -342,6 +340,8 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
             double poseY = pos_vel_status.getPose().getY();
             double poseYaw = pos_vel_status.getPose().getYaw();
 
+
+
             double vx = pos_vel_status.getVel().getVx();
             double vy = pos_vel_status.getVel().getVy();
             double vtheta = pos_vel_status.getVel().getVtheta();
@@ -387,10 +387,9 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
 
     @Override
     public void onCreate() {
-        if (!EventBus.getDefault().isRegistered(this)){
+        if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
-
     }
 
     @Override
