@@ -1,13 +1,13 @@
 package com.jms.cleanse.ui;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -19,15 +19,18 @@ import com.jms.cleanse.config.RobotConfig;
 import com.jms.cleanse.contract.RobotMasterContract;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
 import com.jms.cleanse.util.DisplayUtil;
-import com.jms.cleanse.util.SystemUtils;
+import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.MapSelectPopupWindow;
-import com.jms.cleanse.widget.POIPoint;
 import com.jms.cleanse.widget.RockerView;
+import com.jms.cleanse.widget.mapview.TestPOI;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -39,8 +42,7 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ShortPressScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
-import robot.boocax.com.sdkmodule.surface.coverage_choose.CoverageMode;
-import robot.boocax.com.sdkmodule.view.BoocaxMapView;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
 public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         implements RockerView.OnAngleChangeListener,
@@ -64,6 +66,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     JMMapView mapView;
     @BindView(R.id.rockerview)
     RockerView rockerview;
+    List<TestPOI> testPOIS;
 
     double[] speed = new double[3];
 
@@ -96,6 +99,13 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             }
         });
 
+        testPOIS = new ArrayList<>();
+        testPOIS.add(new TestPOI(-6.7, 0.45, false));
+        testPOIS.add(new TestPOI(-2.55, 4.4, false));
+        testPOIS.add(new TestPOI(1.57, -1.15, true));
+        testPOIS.add(new TestPOI(0.3, -2.65, false));
+        testPOIS.add(new TestPOI(0, -1.15, false));
+        mapView.setTestPOIS(testPOIS);
 
     }
 
@@ -121,6 +131,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         rockerview.setOnAngleChangeListener(this);
 
     }
+
+
 
     @Override
     protected void onDestroy() {
@@ -214,6 +226,27 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
 
     /**
+     * 速度与位置信息
+     */
+    @Subscribe(threadMode = ThreadMode.POSTING)
+    public void getVelPose(Pos_vel_status pos_vel_status) {
+        if (pos_vel_status != null) {
+            double poseX = pos_vel_status.getPose().getX();
+            double poseY = pos_vel_status.getPose().getY();
+            double poseYaw = pos_vel_status.getPose().getYaw();
+
+            double vx = pos_vel_status.getVel().getVx();
+            double vy = pos_vel_status.getVel().getVy();
+            double vtheta = pos_vel_status.getVel().getVtheta();
+
+            mapView.setPos(pos_vel_status.getPose());
+            // 更新机器人位置
+            Log.d(TAG, "getVelPose: x" + poseX + "y"+poseY);
+        }
+    }
+
+
+    /**
      *
      * @param angle 角度[0,360)
      * @param length [0,R-r]
@@ -221,11 +254,12 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     public void change(double angle, float length) {
         // 机器人的线速度 vx
-        speed[0] = length * RobotConfig.MAX_VEL;
+        speed[0] = -Math.sin(convertAngleToRadians(angle)) * length * RobotConfig.MAX_VEL;
         // vy 没有意义 设置为0
         speed[1] = 0;
         // 机器人的角速度
-        speed[2] = convertAngleToRadians(angle) * ( RobotConfig.MAX_ANGULAR_SPEED / (2 * Math.PI));
+        speed[2] = Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED;
+        Log.d(TAG, "change: vx:"+"angle:"+angle+"length:"+length + speed[0] + "vy:"+speed[1]+"vr:"+speed[2]);
     }
 
     @Override
@@ -238,6 +272,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         super.onResume();
 //        mapView.parse();                                                  //读取地图文件
 //        mapView.setMapMode(CoverageMode.MODE_SHOWMAP).loadMapViews(SystemUtils.getTargetVersion());//加载BoocaxMapView的布局.
+        byte[] mapBytes = FileUtil.readPng("map.png",this);
+        if (mapBytes != null){
+            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes,0,mapBytes.length);
+            mapView.setMap(bitmap);
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING)

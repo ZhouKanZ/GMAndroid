@@ -3,6 +3,7 @@ package com.jms.cleanse.widget.mapview;
 import android.graphics.RectF;
 
 import com.jms.cleanse.config.RobotConfig;
+import com.jms.cleanse.util.DisplayUtil;
 
 /**
  * Created by zhoukan on 2018/3/31.
@@ -57,14 +58,10 @@ public class TestPOI {
      * @return 返回Android的坐标
      */
     public double[] getAndroidCoordinate(int maxX, int maxY){
-        double ox = this.x / RobotConfig.MAP_SCALE;
-        double oy = this.y / RobotConfig.MAP_SCALE;
-        // 转换成Android坐标系
-        double ax = maxX / 2 + ox;
-        double ay = maxY / 2 - oy;
-        this.ax = ax;
-        this.ay = ay;
-        return new double[]{ax,ay};
+        double[] position = DisplayUtil.getAndroidCoordinate(this.x,this.y,maxX,maxY);
+        this.ax = position[0];
+        this.ay = position[1];
+        return position;
     }
 
     public double getX() {
