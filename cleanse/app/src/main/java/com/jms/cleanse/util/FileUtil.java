@@ -1,8 +1,11 @@
 package com.jms.cleanse.util;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.google.gson.Gson;
 import com.jms.cleanse.JMApplication;
+import com.jms.cleanse.entity.file.POIJson;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,10 +22,13 @@ import java.io.InputStreamReader;
 public class FileUtil {
 
 
-    public static final String PARENT_PATH = JMApplication.context.getFilesDir() + File.separator + "Boocax" + File.separator + "curDoc";
+    public static final String PARENT_PATH =
+            JMApplication.context.getFilesDir() + File.separator + "Boocax" + File.separator + "curDoc";
     public static final String POI_JSON = "poi.json";
     public static final String POI_TASK_JSON = "poitask.json";
-
+    public static final int ADD = 0;
+    public static final int DELETE = 1;
+    public static final int UPDATE = 2;
 
     public static String readFile(String fileName) {
         String res = "";
@@ -73,7 +79,7 @@ public class FileUtil {
         return pngBytes;
     }
 
-    public static String readFileJM(String fileName) {
+    public static POIJson readFileJM(String fileName) {
         String content = "";
         FileInputStream fis = null;
         File file = new File(PARENT_PATH, fileName);
@@ -96,7 +102,11 @@ public class FileUtil {
                 }
             }
         }
-        return content;
+
+        Log.i("readFile", "content = " + content);
+        Gson gson = new Gson();
+        POIJson poiJson = gson.fromJson(content, POIJson.class);
+        return poiJson;
     }
 
 

@@ -12,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 
+import com.jms.cleanse.entity.db.PoiPoint;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.mapview.TestPOI;
 
@@ -59,9 +60,10 @@ public class UItestActivity extends AppCompatActivity {
         mapView.setMap(bitmap);
 //        mapView.setTestPOIS(testPOIS);
         mapView.setOnClickListener(new JMMapView.OnClickListener() {
+
             @Override
-            public void onPointClick(TestPOI poi, int pos) {
-                Log.d("xxx", "onPointClick:  i had been clicked");
+            public void onPointClick(PoiPoint poi, int pos) {
+
             }
 
             @Override
