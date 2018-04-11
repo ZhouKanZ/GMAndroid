@@ -29,7 +29,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -91,21 +90,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             public void run() {
                 int layoutWidth = layoutRobotMaster.getMeasuredWidth();
                 int layoutHeight = layoutRobotMaster.getMeasuredHeight();
-
                 float toolBarHeight = DisplayUtil.dip2px(RobotMasterActivity.this, 33);
-
-                Log.d("measure", "run: w :" + layoutWidth + ",h:" + (layoutHeight - toolBarHeight));
-
             }
         });
-
-        testPOIS = new ArrayList<>();
-        testPOIS.add(new TestPOI(-6.7, 0.45, false));
-        testPOIS.add(new TestPOI(-2.55, 4.4, false));
-        testPOIS.add(new TestPOI(1.57, -1.15, true));
-        testPOIS.add(new TestPOI(0.3, -2.65, false));
-        testPOIS.add(new TestPOI(0, -1.15, false));
-        mapView.setTestPOIS(testPOIS);
 
     }
 
@@ -119,7 +106,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                     layoutRightSider.setVisibility(View.VISIBLE);
                 }
             });
-
             popupWindow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -127,11 +113,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 }
             });
         }
-
         rockerview.setOnAngleChangeListener(this);
 
     }
-
 
 
     @Override
@@ -156,9 +140,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 break;
             case R.id.ib_server_list:
                 // 绘制point
-//                BoocaxMapView.userShowPoi("p1",false);
-//                SurfaceView poi = new POIPoint(this);
-//                mapView.addView(poi, ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
                 break;
         }
     }
@@ -241,14 +222,13 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
             mapView.setPos(pos_vel_status.getPose());
             // 更新机器人位置
-            Log.d(TAG, "getVelPose: x" + poseX + "y"+poseY);
+            Log.d(TAG, "getVelPose: x" + poseX + "y" + poseY);
         }
     }
 
 
     /**
-     *
-     * @param angle 角度[0,360)
+     * @param angle  角度[0,360)
      * @param length [0,R-r]
      */
     @Override
@@ -258,8 +238,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         // vy 没有意义 设置为0
         speed[1] = 0;
         // 机器人的角速度
-        speed[2] = Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED;
-        Log.d(TAG, "change: vx:"+"angle:"+angle+"length:"+length + speed[0] + "vy:"+speed[1]+"vr:"+speed[2]);
+        speed[2] = -Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED;
+        Log.d(TAG, "change: vx:" + "angle:" + angle + "length:" + length + speed[0] + "vy:" + speed[1] + "vr:" + speed[2]);
     }
 
     @Override
@@ -270,11 +250,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     protected void onResume() {
         super.onResume();
-//        mapView.parse();                                                  //读取地图文件
-//        mapView.setMapMode(CoverageMode.MODE_SHOWMAP).loadMapViews(SystemUtils.getTargetVersion());//加载BoocaxMapView的布局.
-        byte[] mapBytes = FileUtil.readPng("map.png",this);
-        if (mapBytes != null){
-            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes,0,mapBytes.length);
+        byte[] mapBytes = FileUtil.readPng("map.png", this);
+        if (mapBytes != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
             mapView.setMap(bitmap);
         }
     }
@@ -294,8 +272,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             popupWindow.notifyAdapter(allMapInfo.getAll_map_info());
         }
     }
-
-
 
     @Override
     public double[] getSpeed() {

@@ -29,4 +29,5 @@ public class POIConfig {
     public static int width = 10;
 
     public static @IdRes int robotPosRes = R.drawable.robot_position;
+    public static @IdRes int centerFlagRes = R.drawable.center_flag;
 }
