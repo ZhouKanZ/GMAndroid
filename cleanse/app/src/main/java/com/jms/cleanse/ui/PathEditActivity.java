@@ -1,10 +1,16 @@
 package com.jms.cleanse.ui;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
@@ -12,6 +18,8 @@ import com.jms.cleanse.contract.PathEditContract;
 import com.jms.cleanse.entity.db.PoiTask;
 import com.jms.cleanse.entity.uiTest.PointSpec;
 import com.jms.cleanse.presenter.PathEditPresenter;
+import com.jms.cleanse.util.FileUtil;
+import com.jms.cleanse.widget.JMMapView;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
@@ -20,19 +28,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class PathEditActivity extends BaseActivity<PathEditPresenter> implements PathEditContract.PathEditView{
+/**
+ * @desc : 任务编辑
+ */
+public class PathEditActivity extends BaseActivity<PathEditPresenter> implements PathEditContract.View {
+
 
     CommonAdapter<PoiTask> adapter;
-    CommonAdapter<PointSpec> pointSpecCommonAdapter;
+    //    CommonAdapter<PointSpec> pointSpecCommonAdapter;
+    RecyclerView.Adapter pointSpecCommonAdapter;
 
     List<PointSpec> specs;
     List<PoiTask> taskEntities;
     @BindView(R.id.iv_exit)
     ImageView ivExit;
-    @BindView(R.id.point_control_rv)
-    RecyclerView pointControlRv;
     @BindView(R.id.btn_start_task)
     Button btnStartTask;
     @BindView(R.id.task_rv)
@@ -41,6 +53,22 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     ImageView ivTaskDelete;
     @BindView(R.id.iv_task_add)
     ImageView ivTaskAdd;
+    @BindView(R.id.map_view)
+    JMMapView mapView;
+    @BindView(R.id.task_list_layout)
+    View taskListLayout;
+    LinearLayout taskListController;
+    @BindView(R.id.tv_cleanse_notice)
+    TextView tvCleanseNotice;
+    @BindView(R.id.isCleanse)
+    Switch isCleanse;
+    @BindView(R.id.btn_add)
+    Button btnAdd;
+    @BindView(R.id.btn_end)
+    Button btnEnd;
+    @BindView(R.id.point_control_rv)
+    LinearLayout pointControlRv;
+
 
     private String taskName;
 
@@ -57,6 +85,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     @Override
     protected void initData() {
 
+
         taskEntities = new ArrayList<>();
 //        mPresenter.objectBoxTest();
         taskEntities = mPresenter.loadData();
@@ -64,8 +93,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             @Override
             protected void convert(ViewHolder holder,PoiTask poiTask, int position) {
                 holder.setText(R.id.tv_task_name, poiTask.name);
-//                holder.setText(R.id.tv_task_location, taskEntity.getLocation());
-//                holder.setText(R.id.tv_create_date, taskEntity.getCreateTime());
             }
         };
 
@@ -90,9 +117,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         taskRv.setLayoutManager(new LinearLayoutManager(this));
         taskRv.setAdapter(adapter);
 
-        pointControlRv.setHasFixedSize(false);
-        pointControlRv.setLayoutManager(new LinearLayoutManager(this));
-        pointControlRv.setAdapter(pointSpecCommonAdapter);
 
 
     }
@@ -116,24 +140,14 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             }
         });
 
-        /**
-         * 设置开关点击监听
-         */
-        pointSpecCommonAdapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
-                switch (position) {
-                    case 0:
-
-                }
-            }
-
-            @Override
-            public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
-                return false;
-            }
-        });
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadMap();
+    }
+
 
     @OnClick({R.id.iv_exit, R.id.btn_start_task, R.id.iv_task_delete, R.id.iv_task_add})
     public void onViewClicked(View view) {
@@ -144,11 +158,68 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             case R.id.btn_start_task:
                 mPresenter.executeTask(taskName);
                 break;
-            case R.id.iv_task_delete:
+            case R.id.iv_task_delete: // 删除任务
                 break;
-            case R.id.iv_task_add:
-                mPresenter.objectBoxTest();
+            case R.id.iv_task_add:    // 添加任务
+                hideLeftLayout();
+                addTask();
                 break;
         }
+    }
+
+    @Override
+    public void addTask() {
+        mapView.setTaskEditing(true);
+    }
+
+    @Override
+    public void taskComplete() {
+        mapView.editComplete();
+    }
+
+    @Override
+    public void addPoint() {
+
+    }
+
+    @Override
+    public void loadMap() {
+        byte[] mapBytes = FileUtil.readPng("map.png");
+        if (mapBytes != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
+            mapView.setMap(bitmap);
+        }
+    }
+
+    @Override
+    public void hideLeftLayout() {
+        taskListLayout.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void showLeftLayout() {
+        taskListLayout.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public boolean isCleansePoint() {
+        return false;
+    }
+
+    @Override
+    public void showNamedDialog() {
+
+    }
+
+    @Override
+    public void dismissNamedDialog() {
+
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // TODO: add setContentView(...) invocation
+        ButterKnife.bind(this);
     }
 }

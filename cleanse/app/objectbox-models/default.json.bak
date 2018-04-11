@@ -17,7 +17,12 @@
           "name": "name"
         }
       ],
-      "relations": []
+      "relations": [
+        {
+          "id": "1:803768033051062647",
+          "name": "poiPoints"
+        }
+      ]
     },
     {
       "id": "2:9026956601336132990",
@@ -71,7 +76,7 @@
   ],
   "lastEntityId": "3:5824807051577633661",
   "lastIndexId": "1:5829146053710008839",
-  "lastRelationId": "0:0",
+  "lastRelationId": "1:803768033051062647",
   "lastSequenceId": "0:0",
   "modelVersion": 4,
   "modelVersionParserMinimum": 4,

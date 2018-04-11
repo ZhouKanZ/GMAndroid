@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PixelFormat;
 import android.graphics.RectF;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,13 +19,15 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.View;
+import android.view.SurfaceView;
 
 import com.alexvasilkov.gestures.GestureController;
 import com.alexvasilkov.gestures.State;
 import com.alexvasilkov.gestures.animation.ViewPositionAnimator;
 import com.alexvasilkov.gestures.views.interfaces.AnimatorView;
 import com.alexvasilkov.gestures.views.interfaces.GestureView;
+import com.jms.cleanse.config.RobotConfig;
+import com.jms.cleanse.util.DisplayUtil;
 import com.jms.cleanse.widget.mapview.POIConfig;
 import com.jms.cleanse.widget.mapview.ScaleUtils;
 import com.jms.cleanse.widget.mapview.TestPOI;
@@ -42,28 +45,35 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
  * @desc: 绘制POI / 绘制路径  /
  */
 
-public class JMMapView extends View implements GestureView, AnimatorView, View.OnTouchListener {
+public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Runnable, GestureView, AnimatorView {
+
+    /**
+     * MAPVIEW的模式
+     */
+    public enum Mode {
+        EDIT, // 编辑模式
+        EXE,  // 执行模式
+        FREE  // 自由模式
+    }
 
     private static final String TAG = "JMMapView";
-    private final GestureController controller;
-    private ViewPositionAnimator positionAnimator;
-    private static final int MAX_CLICK_DURATION = 200;
-    private long startClickTime;
 
-    // 刷新频率
-    public static final int TIME_IN_FRAME = 30;
+    private final GestureController controller;                   // 手势控制
+    private ViewPositionAnimator positionAnimator;                // 动画
+    private static final int MAX_CLICK_DURATION = 200;            // 点击事件触发最大间隔
+    private long startClickTime;
+    private static int TIME_IN_FRAME = 30;                  // 刷新频率
 
     private Paint mPaint;
     private Canvas canvas;
-
     private SurfaceHolder holder;
     private Thread t;
     private boolean isDrawing = false;
     private List<TestPOI> testPOIS;
-    private LinkedList<Path> paths;
-    private LinkedList<RectF> points;
-    // 机器人位置
-    private Pos_vel_status.pose pos;
+    private LinkedList<Path> paths;                         // 路径的集合
+    private LinkedList<RectF> points;                       // 点对应的矩形区域
+    private Pos_vel_status.pose pos;                        // 机器人位置
+
     /************ 地图坐标系相关的配置 *************/
     private int coodinateX;
     private int coodinateY;
@@ -72,79 +82,26 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
     private Bitmap pathStartRes;
     private Bitmap pathEndRes;
     private Bitmap robotMap;
+    private Bitmap map;
+    private Resources resources;
     // 机器人位置
     private int colorCleanse;
     private int colorUnCleanse;
-    // 地图
-    private Bitmap map;
-    private Resources resources;
-
     /* 矩阵变换 */
-    private float scale = 1.0f;
     private float ratio = 1.0f;
-    private float dx = 0;
-    private float dy = 0;
-    int index = -1;
-
-    float tranX;
-    float tranY;
-
-
+    private float tranX;
+    private float tranY;
+    private boolean changeFlag = false;
     /* 事件 */
     private OnClickListener onClickListener;
     private Matrix changeMatrix = new Matrix();
     private Matrix matrix = new Matrix();
+    private Matrix temp = new Matrix();
 
-    @Override
-    public GestureController getController() {
-        return controller;
-    }
+    /*********        任务编辑模式           **********/
+    private boolean isTaskEditing = false;
+    private Bitmap centerFlag;
 
-    @Override
-    public ViewPositionAnimator getPositionAnimator() {
-        if (positionAnimator == null) {
-            positionAnimator = new ViewPositionAnimator(this);
-        }
-        return positionAnimator;
-    }
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        float[] point = new float[2];
-        point[0] = event.getX();
-        point[1] = event.getY();
-        index = -1;
-        Log.d(TAG, "onTouchEvent: origin point :x" + point[0] + ",y:" + point[1]);
-        changeMatrix.invert(matrix);
-        matrix.mapPoints(point, new float[]{point[0], point[1]});
-        Log.d(TAG, "onTouchEvent: transfrom point:x" + point[0] + ",y:" + point[1]);
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                startClickTime = Calendar.getInstance().getTimeInMillis();
-                break;
-            case MotionEvent.ACTION_UP:
-                long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
-                if (clickDuration < MAX_CLICK_DURATION && onClickListener != null) {
-                    clickEvent(point);
-                }
-                break;
-            case MotionEvent.ACTION_CANCEL:
-                break;
-            case MotionEvent.ACTION_MOVE:
-                break;
-        }
-        return controller.onTouch(this, event);
-    }
-
-    public interface OnClickListener {
-        void onPointClick(TestPOI poi, int pos);
-
-        void onPathClick(int pos);
-    }
-
-    public void setOnClickListener(OnClickListener onClickListener) {
-        this.onClickListener = onClickListener;
-    }
 
     public JMMapView(@NonNull Context context) {
         this(context, null);
@@ -159,7 +116,16 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
         super(context, attrs, defStyleAttr);
 
         this.setFocusable(true);
-        this.setOnTouchListener(this);
+        this.setZOrderOnTop(true);
+
+        holder = getHolder();
+        holder.addCallback(this);
+        holder.setFormat(PixelFormat.TRANSPARENT);
+
+        // surfaceView上面可以被覆盖
+        setZOrderOnTop(true);
+        setZOrderMediaOverlay(true);
+//        this.setSurfaceTextureListener(this);
 
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setColor(Color.BLUE);
@@ -176,7 +142,8 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
         unCleanseRes = BitmapFactory.decodeStream(resources.openRawResource(POIConfig.unCleanseRes));
         pathStartRes = BitmapFactory.decodeStream(resources.openRawResource(POIConfig.pathStartRes));
         pathEndRes = BitmapFactory.decodeStream(resources.openRawResource(POIConfig.pathEndRes));
-        robotMap = BitmapFactory.decodeStream(resources.openRawResource(POIConfig.robotPositionRes));
+        robotMap = BitmapFactory.decodeStream(resources.openRawResource(POIConfig.robotPosRes));
+        centerFlag = BitmapFactory.decodeStream(resources.openRawResource(POIConfig.centerFlagRes));
 
         colorCleanse = ContextCompat.getColor(this.getContext(), POIConfig.pathColorCleanse);
         colorUnCleanse = ContextCompat.getColor(this.getContext(), POIConfig.pathColorUnCleanse);
@@ -184,10 +151,9 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
         /* make jmmapview support gesture */
         controller = new GestureController(this);
         controller.getSettings()
-                .setPanEnabled(true)
-                .setZoomEnabled(true)
-                .setViewport(getWidth(), getHeight())
-                .disableBounds();
+//                .setRotationEnabled(true)
+                .disableBounds()
+                .setMaxZoom((float) 1.5);
 
         controller.addOnStateChangeListener(new GestureController.OnStateChangeListener() {
             @Override
@@ -209,78 +175,51 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
      */
     private void applyState(State state) {
         state.get(changeMatrix);
-        invalidate();
+    }
+
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        isDrawing = true;
+        t = new Thread(this);
+        t.start();
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-//        drawMap();
-        this.canvas = canvas;
-        canvas.save();
-        canvas.drawColor(Color.WHITE);
-        canvasChange();
-        canvas.concat(changeMatrix);
-        drawBitMap();
-        drawPath();
-        drawPoi();
-        drawRobot();
-        canvas.restore();
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
     }
 
-    private void drawRobot() {
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        isDrawing = false;
+    }
 
-        if (pos != null){
-            canvas.drawBitmap(robotMap, (float) (pos.getX() - robotMap.getWidth() / 2), (float) (pos.getY() - robotMap.getHeight()), mPaint);
+    @Override
+    public void run() {
+
+        while (isDrawing) {
+            long startTime = System.currentTimeMillis();
+            drawMap();
+            long endTime = System.currentTimeMillis();
+            int diffTime = (int) (endTime - startTime);
+            while (diffTime <= TIME_IN_FRAME) {
+                diffTime = (int) (System.currentTimeMillis() - startTime);
+                Thread.yield();
+            }
         }
-
     }
 
-//    @Override
-//    public void run() {
-//
-//        while (isDrawing) {
-//            long startTime = System.currentTimeMillis();
-//            drawMap();
-//            long endTime = System.currentTimeMillis();
-//            int diffTime = (int) (endTime - startTime);
-//            while (diffTime <= TIME_IN_FRAME) {
-//                diffTime = (int) (System.currentTimeMillis() - startTime);
-//                Thread.yield();
-//            }
-//        }
-//    }
-
-//    /**
-//     * 绘制地图
-//     */
-//    private void drawMap() {
-//        try {
-//            if (null != holder && holder.getSurface().isValid() && bitmapIsValid()) {
-//                canvas = holder.lockCanvas();
-//                canvas.save();
-//                canvas.drawColor(Color.WHITE);
-//                canvasChange();
-//                canvas.concat(changeMatrix);
-//                drawBitMap();
-//                drawPath();
-//                drawPoi();
-//                canvas.restore();
-//            }
-//        } catch (Exception e) {
-//            e.getStackTrace();
-//        } finally {
-//            if (null != canvas) {
-//                holder.unlockCanvasAndPost(canvas);
-//            }
-//        }
-//    }
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        canvasChange();
+    }
 
     /**
-     * @aim: 设置bitmap后进行的变换
+     * @aim: 进行画布操作，将绘制起点设置为bitmap的左上角，坐标系转换到bitmap的像素坐标系上，方便作图
      */
     private void canvasChange() {
-        if (!bitmapIsValid()){
+        if (!bitmapIsValid()) {
             return;
         }
         coodinateX = map.getWidth();
@@ -301,8 +240,52 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
             tranX = 0;
         }
         Log.d(TAG, "canvasChange: " + ratio + "tranX" + tranY + "tranY" + tranY);
+        changeMatrix.reset();
         changeMatrix.preScale(ratio, ratio);
         changeMatrix.preTranslate(tranX, tranY);
+        // 只会执行一次
+        changeFlag = false;
+    }
+
+    /**
+     * 绘制地图
+     */
+    private void drawMap() {
+
+        synchronized (holder) {
+            try {
+                if (null != holder) {
+                    canvas = holder.lockCanvas();
+                    canvas.save();
+                    canvas.drawColor(Color.WHITE);
+                    if (changeFlag) {
+                        canvasChange();
+                    }
+                    canvas.concat(changeMatrix);
+                    drawBitMap();
+                    drawPath();
+                    drawPoi();
+                    drawRobot();
+                    canvas.restore();
+                    drawCenterFlag();
+                }
+            } catch (Exception e) {
+                e.getStackTrace();
+            } finally {
+                if (null != canvas) {
+                    holder.unlockCanvasAndPost(canvas);
+                }
+            }
+        }
+    }
+
+    /**
+     * 绘制中心区域
+     */
+    private void drawCenterFlag() {
+        if (isTaskEditing) {
+            canvas.drawBitmap(centerFlag, getWidth() / 2 - centerFlag.getWidth() / 2, getHeight() / 2 - centerFlag.getHeight(), mPaint);
+        }
     }
 
 
@@ -319,6 +302,7 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
      * 绘制POI点 测试点数据 (-2.5，4.4)
      */
     private void drawPoi() {
+
         TestPOI lastPoi = null;
         for (int i = 0; i < testPOIS.size(); i++) {
             TestPOI poiPoint = testPOIS.get(i);
@@ -331,12 +315,24 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
             }
             lastPoi = poiPoint;
 
-            /* 绘制起点和终点 */
-            if (i == 0) {
-                canvas.drawBitmap(pathStartRes, (float) (poiPoint.getAx() - pathStartRes.getWidth() / 2), (float) (poiPoint.getAy() - pathStartRes.getHeight()), mPaint);
-            } else if (i > 0 && i == testPOIS.size() - 1) {
-                canvas.drawBitmap(pathEndRes, (float) (poiPoint.getAx() - pathEndRes.getWidth() / 2), (float) (poiPoint.getAy() - pathEndRes.getHeight()), mPaint);
+            if (!isTaskEditing) {
+                /* 绘制起点和终点 */
+                if (i == 0) {
+                    canvas.drawBitmap(pathStartRes, (float) (poiPoint.getAx() - pathStartRes.getWidth() / 2), (float) (poiPoint.getAy() - pathStartRes.getHeight()), mPaint);
+                } else if (i > 0 && i == testPOIS.size() - 1) {
+                    canvas.drawBitmap(pathEndRes, (float) (poiPoint.getAx() - pathEndRes.getWidth() / 2), (float) (poiPoint.getAy() - pathEndRes.getHeight()), mPaint);
+                }
             }
+        }
+
+    }
+
+    private void drawRobot() {
+
+        if (pos != null) {
+            double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(pos.getX(), pos.getY(), coodinateX, coodinateY);
+            Log.d(TAG, "drawRobot: x:" + androidRobotPos[0] + "y:" + androidRobotPos[1] + "dx" + (float) (androidRobotPos[0] - robotMap.getWidth() / 2) + "dy:" + (float) (androidRobotPos[1] - robotMap.getHeight() / 2));
+            canvas.drawBitmap(robotMap, (float) (androidRobotPos[0] - (robotMap.getWidth() / 2)), (float) (androidRobotPos[1] - (robotMap.getHeight() / 2)), mPaint);
         }
 
     }
@@ -363,7 +359,6 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
     }
 
     @SuppressLint("ResourceType")
-
     private void drawPath() {
 
         getPathList(this.testPOIS);
@@ -383,47 +378,140 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
 
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int w = 0;
+        int h = 0;
+        if (null != map) {
+            w = map.getWidth();
+            h = map.getHeight();
+        }
+        setMeasuredDimension(getDefaultSize(w, widthMeasureSpec), getDefaultSize(h, heightMeasureSpec));
+    }
 
     /**
-     * 只想出现一次
+     * 设置地图
      */
     public void setMap(Bitmap map) {
 
-//        Matrix m = new Matrix();
-//        m.setRotate(90);
-//        Log.d(TAG, "setMap: "+map.getWidth()+"h:"+map.getHeight());
-//        this.map = Bitmap.createBitmap(map,0,0,map.getWidth(),map.getHeight(),m,true);
         this.map = map;
-        controller.getSettings().setImage(map.getWidth(), map.getHeight());
-        invalidate();
+        if (bitmapIsValid())
+            changeFlag = true;
     }
 
     public void setTestPOIS(List<TestPOI> testPOIS) {
         if (testPOIS != null && testPOIS.size() > 0) {
             this.testPOIS.clear();
             this.testPOIS.addAll(testPOIS);
-            invalidate();
         }
     }
 
-    /**
-     * @param pos
-     */
-    public void setPos_vel_status(Pos_vel_status.pose pos) {
-        this.pos= pos;
+    @Override
+    public GestureController getController() {
+        return controller;
     }
 
-    /**
-     * 点击事件
-     * @param point
-     */
-    private void clickEvent(float[] point) {
-        for (int i = 0; i < points.size(); i++) {
-            RectF rectF = points.get(i);
-            if (rectF.contains(point[0],point[1])){
-                onClickListener.onPointClick(testPOIS.get(i),i);
+    @Override
+    public ViewPositionAnimator getPositionAnimator() {
+        if (positionAnimator == null) {
+            positionAnimator = new ViewPositionAnimator(this);
+        }
+        return positionAnimator;
+    }
+
+    public void editComplete() {
+        isTaskEditing = false;
+    }
+
+    public interface OnClickListener {
+        void onPointClick(TestPOI poi, int pos);
+        void onPathClick(int pos);
+    }
+
+    public void setOnClickListener(OnClickListener onClickListener) {
+        this.onClickListener = onClickListener;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        float[] point = new float[2];
+        point[0] = event.getX();
+        point[1] = event.getY();
+        changeMatrix.invert(matrix);
+        matrix.mapPoints(point, new float[]{point[0], point[1]});
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                startClickTime = Calendar.getInstance().getTimeInMillis();
+                break;
+            case MotionEvent.ACTION_UP:
+                long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
+                clickEvent(point, clickDuration);
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                break;
+            case MotionEvent.ACTION_MOVE:
+                break;
+        }
+
+        return controller.onTouch(this, event);
+    }
+
+    private void clickEvent(float[] point, long clickDuration) {
+        if (clickDuration < MAX_CLICK_DURATION && onClickListener != null) {
+            for (int i = 0; i < points.size(); i++) {
+                RectF rectF = points.get(i);
+                if (rectF.contains(point[0], point[1])) {
+                    onClickListener.onPointClick(testPOIS.get(i), i);
+                }
             }
         }
+    }
+
+    /**
+     * 设置绘制模式
+     *
+     * @param taskEditing
+     */
+    public void setTaskEditing(boolean taskEditing) {
+        isTaskEditing = taskEditing;
+    }
+
+    /**
+     * 得到中心点的在地图上的位置
+     *
+     * @return
+     */
+    private float[] getCenterFlagOnBitmap() {
+        float[] centerPoint = new float[]{getWidth() / 2, getHeight() / 2};
+        changeMatrix.invert(temp);
+        temp.mapPoints(centerPoint, new float[]{centerPoint[0], centerPoint[1]});
+        return centerPoint;
+    }
+
+    /**
+     * 将图上的坐标转换为物理坐标
+     *
+     * @param bitmapPos
+     * @return
+     */
+    private float[] convertBitmapPos2PhysicalCoordinate(float[] bitmapPos) {
+        float[] changePos = new float[]{bitmapPos[0] - coodinateX / 2, coodinateY / 2 - bitmapPos[1]};
+        changePos[0] = (float) (changePos[0] * RobotConfig.MAP_SCALE);
+        changePos[1] = (float) (changePos[1] * RobotConfig.MAP_SCALE);
+        Log.d(TAG, "convertBitmapPos2PhysicalCoordinate: x:" + changePos[0] + ",y:" + changePos[1]);
+        return changePos;
+    }
+
+    /**
+     * 添加点
+     */
+    public void addPoint(boolean isCleanse) {
+        float[] tempPos = getCenterFlagOnBitmap();
+        tempPos = convertBitmapPos2PhysicalCoordinate(tempPos);
+        TestPOI tempTestPoi = new TestPOI(tempPos[0], tempPos[1], isCleanse);
+        testPOIS.add(tempTestPoi);
     }
 
     /**
@@ -432,9 +520,10 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
      * @param testPOIS
      */
     private void getPathList(List<TestPOI> testPOIS) {
-        // 记录上一个点的坐标
+
         paths.clear();
         points.clear();
+        // 记录上一个点的坐标
         double[] lastPoi = null;
         for (int i = 0; i < testPOIS.size(); i++) {
             TestPOI poiPoint = testPOIS.get(i);
@@ -450,9 +539,17 @@ public class JMMapView extends View implements GestureView, AnimatorView, View.O
             lastPoi = currentPoi;
             // 添加矩形区域
             points.add(poiPoint.getRect(currentPoi[0], currentPoi[1], coodinateX, coodinateY, cleanseRes.getWidth() / 2));
+
         }
     }
 
+    public List<TestPOI> getTestPOIS(){
+        return this.testPOIS;
+    }
+
+    public void setPos(Pos_vel_status.pose pos) {
+        this.pos = pos;
+    }
 
     /**
      * bitmap 有效

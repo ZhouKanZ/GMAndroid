@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 
 import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
 
@@ -24,6 +26,12 @@ public abstract class BaseActivity<P extends IPresenter> extends RxAppCompatActi
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //去掉标题栏
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //隐藏状态栏
+        hideStatusBar(true);
+
+
         setContentView(getContentView());
         unbinder = ButterKnife.bind(this);
         mPresenter = loadPresenter();
@@ -33,6 +41,25 @@ public abstract class BaseActivity<P extends IPresenter> extends RxAppCompatActi
 
         if (mPresenter != null){
             mPresenter.onCreate();
+        }
+    }
+
+    private void hideStatusBar(boolean isHide) {
+        if (isHide)
+        {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN;
+            getWindow().setAttributes(lp);
+            getWindow().addFlags(
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        } else
+        {
+            WindowManager.LayoutParams attr = getWindow().getAttributes();
+            attr.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().setAttributes(attr);
+            //如果不注释下面这句话，状态栏将把界面挤下去
+            /*getWindow().clearFlags(
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);*/
         }
     }
 

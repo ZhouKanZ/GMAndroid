@@ -2,6 +2,8 @@ package com.jms.cleanse.util;
 
 import android.content.Context;
 
+import com.jms.cleanse.config.RobotConfig;
+
 /**
  * Created by zhoukan on 2018/3/26.
  *
@@ -52,6 +54,16 @@ public class DisplayUtil {
     public static int sp2px(Context context, float spValue) {
         final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (spValue * fontScale + 0.5f);
+    }
+
+
+    public static double[] getAndroidCoordinate(double x,double y,int maxX, int maxY){
+        double ox = x / RobotConfig.MAP_SCALE;
+        double oy = y / RobotConfig.MAP_SCALE;
+        // 转换成Android坐标系
+        double ax = maxX / 2 + ox;
+        double ay = maxY / 2 - oy;
+        return new double[]{ax,ay};
     }
 
 }

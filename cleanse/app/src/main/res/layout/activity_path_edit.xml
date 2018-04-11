@@ -8,6 +8,13 @@
     <include
         android:id="@+id/task_list_layout"
         layout="@layout/task_list_layout" />
+
+    <com.jms.cleanse.widget.JMMapView
+        android:id="@+id/map_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@+id/task_list_layout"
+        />
     
     <ImageView
         android:id="@+id/iv_exit"
@@ -19,18 +26,64 @@
         android:layout_marginTop="17dp"
         />
 
-    <android.support.v7.widget.RecyclerView
+    <LinearLayout
         android:id="@+id/point_control_rv"
         android:layout_width="80dp"
-        android:layout_height="287dp"
+        android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:background="@drawable/master_slider_background"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"
         android:paddingTop="31dp"
+        android:paddingBottom="31dp"
         android:elevation="1dp"
-        />
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+
+        <TextView
+
+            android:id="@+id/tv_cleanse_notice"
+            android:layout_width="match_parent"
+            android:text="@string/isCleanse"
+            android:layout_height="24dp"
+            android:background="@drawable/btn_cleanse_spec_background_selector"
+            android:textColor="@color/colorToolbarTitle"
+            android:textSize="@dimen/text_size_12sp"
+            android:gravity="center"
+            />
+        <!-- 是否为消毒点 -->
+        <Switch
+            android:id="@+id/isCleanse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:text="@string/add"
+            android:background="@drawable/btn_cleanse_spec_background_selector"
+            android:textColor="@color/colorToolbarTitle"
+            android:textSize="@dimen/text_size_12sp"
+            android:gravity="center"
+            />
+        <Button
+            android:id="@+id/btn_end"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:text="@string/path_end"
+            android:background="@drawable/btn_cleanse_spec_background_selector"
+            android:textColor="@color/colorToolbarTitle"
+            android:textSize="@dimen/text_size_12sp"
+            android:gravity="center"
+            android:layout_marginTop="30dp"
+            />
+
+    </LinearLayout>
+
 
     <!-- 任务开始按钮 -->
     <Button
@@ -40,20 +93,14 @@
         android:text="@string/start_task"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="20dp"
-        android:layout_marginLeft="360dp"
+        android:layout_centerInParent="true"
         android:background="@drawable/btn_task_start_selector"
         android:textSize="@dimen/text_size_12sp"
         android:textColor="@color/colorToolbarTitle"
         android:elevation="1dp"
+        android:layout_centerHorizontal="true"
         />
 
-    <ImageView
-        android:id="@+id/iv_map"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/maptest"
-        android:layout_toRightOf="@+id/task_list_layout"
-        />
 
 
 </RelativeLayout>

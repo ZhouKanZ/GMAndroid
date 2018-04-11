@@ -25,11 +25,12 @@ import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
 
+
 /**
  * Created by WangJun on 2018/4/9.
  */
 
-public class PathEditPresenter extends BasePresenter<PathEditContract.PathEditView> {
+public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
 
     private static final String TAG = "PathEditPresenter";
     private Box<PoiTask> poiTaskBox;
@@ -199,3 +200,4 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.PathEditVi
         return poiNames;
     }
 }
+
