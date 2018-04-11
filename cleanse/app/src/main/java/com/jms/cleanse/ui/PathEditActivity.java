@@ -42,6 +42,8 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     @BindView(R.id.iv_task_add)
     ImageView ivTaskAdd;
 
+    private String taskName;
+
     @Override
     protected PathEditPresenter loadPresenter() {
         return new PathEditPresenter();
@@ -58,13 +60,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         taskEntities = new ArrayList<>();
 //        mPresenter.objectBoxTest();
         taskEntities = mPresenter.loadData();
-//        taskEntities.add(new TaskEntity("大厅清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-//        taskEntities.add(new TaskEntity("厕所清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-//        taskEntities.add(new TaskEntity("卫生间清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-//        taskEntities.add(new TaskEntity("茅坑清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-//        taskEntities.add(new TaskEntity("洗手间清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-//        taskEntities.add(new TaskEntity("浴室清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-
         adapter = new CommonAdapter<PoiTask>(this, R.layout.item_task_info, taskEntities) {
             @Override
             protected void convert(ViewHolder holder,PoiTask poiTask, int position) {
@@ -87,6 +82,43 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             }
         };
 
+    }
+
+    @Override
+    protected void initListeners() {
+        taskRv.setHasFixedSize(false);
+        taskRv.setLayoutManager(new LinearLayoutManager(this));
+        taskRv.setAdapter(adapter);
+
+        pointControlRv.setHasFixedSize(false);
+        pointControlRv.setLayoutManager(new LinearLayoutManager(this));
+        pointControlRv.setAdapter(pointSpecCommonAdapter);
+
+
+    }
+
+    private void setAdapterItemListener(){
+
+        /**
+         * 任务列表点击监听
+         */
+        adapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
+
+                PoiTask poiTask = taskEntities.get(position);
+                taskName = poiTask.name;
+            }
+
+            @Override
+            public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
+                return false;
+            }
+        });
+
+        /**
+         * 设置开关点击监听
+         */
         pointSpecCommonAdapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
@@ -101,18 +133,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 return false;
             }
         });
-
-    }
-
-    @Override
-    protected void initListeners() {
-        taskRv.setHasFixedSize(false);
-        taskRv.setLayoutManager(new LinearLayoutManager(this));
-        taskRv.setAdapter(adapter);
-
-        pointControlRv.setHasFixedSize(false);
-        pointControlRv.setLayoutManager(new LinearLayoutManager(this));
-        pointControlRv.setAdapter(pointSpecCommonAdapter);
     }
 
     @OnClick({R.id.iv_exit, R.id.btn_start_task, R.id.iv_task_delete, R.id.iv_task_add})
@@ -122,7 +142,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 this.finish();
                 break;
             case R.id.btn_start_task:
-                mPresenter.executeTask("test");
+                mPresenter.executeTask(taskName);
                 break;
             case R.id.iv_task_delete:
                 break;
