@@ -3,7 +3,6 @@ package com.jms.cleanse.ui;
 import android.content.Intent;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -125,7 +124,7 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
             startActivity(new Intent(ServerListActivity.this, RobotMasterActivity.class));
         } else if ("true".equals(isLock)) {                                                 //有密码登录(跳转至SignActivity页面)
 //            startActivity(intent);                      //跳转至SignActivity页面
-            Toast.makeText(this,"服务器被加锁",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "服务器被加锁", Toast.LENGTH_SHORT).show();
         }
     }
 

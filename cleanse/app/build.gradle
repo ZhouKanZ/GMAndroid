@@ -29,6 +29,7 @@ android {
         sourceCompatibility 1.8
     }
 }
+apply plugin: 'io.objectbox'
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -49,5 +50,4 @@ dependencies {
     compile(name:'sdkmodule-debug',ext:'aar'){
         exclude group: 'com.google.code.gson', module: 'gson'
     }
-
 }

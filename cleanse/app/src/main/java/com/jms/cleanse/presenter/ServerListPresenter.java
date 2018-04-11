@@ -2,8 +2,6 @@ package com.jms.cleanse.presenter;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -19,6 +17,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +51,7 @@ import robot.boocax.com.sdkmodule.view.BoocaxMapView;
 
 public class ServerListPresenter extends BasePresenter<ServerListContract.ServerListView> implements ServerListContract.Presenter {
 
+    private static final String TAG = "ServerListPresenter";
     public static SharedPreferences sp_curDoc;
     public static SharedPreferences.Editor editor_curDoc;//用于记录文件(服务器传来)
 
@@ -132,8 +132,27 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
         LoginEntity.recvFileTypes.add("anchor.dat");
         LoginEntity.recvFileTypes.add("poi.json");
         LoginEntity.recvFileTypes.add("agv_graph.json");//定义Android客户端接收的文件类型,SDK使用者根据自身客户端功能选择需要接收的文件
+
+        initCustomFile();//创建自定义的路径任务文件
     }
 
+    private void initCustomFile(){
+        File file = new File(JMApplication.context.getFilesDir() + "/Boocax/curDoc", "poitask.json");
+
+        if (file.exists() && file.isFile()) {
+//            file.delete();
+        }else {
+            try {
+                if (file.createNewFile()) {
+                    Log.i(TAG, "initData: file is created" + file.getAbsolutePath());
+                }else {
+                    Log.i(TAG, "initData: file create failed");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 //    private void initState() {
 //    }
 

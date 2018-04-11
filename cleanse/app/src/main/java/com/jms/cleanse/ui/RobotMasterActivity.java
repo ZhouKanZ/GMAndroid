@@ -3,17 +3,13 @@ package com.jms.cleanse.ui;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
 import com.jms.cleanse.R;
@@ -21,13 +17,10 @@ import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.config.RobotConfig;
 import com.jms.cleanse.contract.RobotMasterContract;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
-import com.jms.cleanse.presenter.ServerListPresenter;
 import com.jms.cleanse.util.DisplayUtil;
 import com.jms.cleanse.util.FileUtil;
-import com.jms.cleanse.util.SystemUtils;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.MapSelectPopupWindow;
-import com.jms.cleanse.widget.POIPoint;
 import com.jms.cleanse.widget.RockerView;
 import com.jms.cleanse.widget.mapview.TestPOI;
 
@@ -52,9 +45,6 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
-import robot.boocax.com.sdkmodule.surface.coverage_choose.CoverageMode;
-import robot.boocax.com.sdkmodule.surface.surfaceview.SurfaceViewBaseMap;
-import robot.boocax.com.sdkmodule.view.BoocaxMapView;
 
 public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         implements RockerView.OnAngleChangeListener,
@@ -108,7 +98,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             }
         });
 
-        byte[] mapBytes = FileUtil.readPng("map.png",this);
+        byte[] mapBytes = FileUtil.readPng("map.png");
         if (mapBytes != null){
             Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes,0,mapBytes.length);
             mapView.setMap(bitmap);

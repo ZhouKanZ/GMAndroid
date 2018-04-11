@@ -1,0 +1,85 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:6237163883331410680",
+      "lastPropertyId": "3:8960044613601875221",
+      "name": "PoiTask",
+      "properties": [
+        {
+          "id": "1:6707996892861046524",
+          "name": "id"
+        },
+        {
+          "id": "2:3282799996095296824",
+          "name": "name"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:9026956601336132990",
+      "lastPropertyId": "4:8921445939423309971",
+      "name": "PoiPoint",
+      "properties": [
+        {
+          "id": "1:9183145813882324782",
+          "name": "id"
+        },
+        {
+          "id": "2:386864488958109869",
+          "name": "state"
+        },
+        {
+          "id": "3:499229879308352834",
+          "name": "name"
+        },
+        {
+          "id": "4:8921445939423309971",
+          "indexId": "1:5829146053710008839",
+          "name": "positionId"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:5824807051577633661",
+      "lastPropertyId": "4:6645535948843846721",
+      "name": "PositionBean",
+      "properties": [
+        {
+          "id": "1:4358882176837744106",
+          "name": "id"
+        },
+        {
+          "id": "2:5606029185969505935",
+          "name": "x"
+        },
+        {
+          "id": "3:7514748635003982515",
+          "name": "y"
+        },
+        {
+          "id": "4:6645535948843846721",
+          "name": "yaw"
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "3:5824807051577633661",
+  "lastIndexId": "1:5829146053710008839",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 4,
+  "modelVersionParserMinimum": 4,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [
+    8960044613601875221
+  ],
+  "retiredRelationUids": [],
+  "version": 1
+}

@@ -3,7 +3,6 @@ package com.jms.cleanse.widget.mapview;
 import android.graphics.Rect;
 
 import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.POI_points_entity;
-import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
 
 /**
  * Created by WangJun on 2018/3/27.
