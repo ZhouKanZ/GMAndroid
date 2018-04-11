@@ -17,6 +17,7 @@ import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.config.RobotConfig;
 import com.jms.cleanse.contract.RobotMasterContract;
+import com.jms.cleanse.entity.robot.LaserEntity;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
 import com.jms.cleanse.util.DisplayUtil;
 import com.jms.cleanse.util.FileUtil;
@@ -33,7 +34,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
-import robot.boocax.com.sdkmodule.entity.entity_sdk.analysis_data.LaserEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.LongPressPositionEntity;
@@ -114,7 +114,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             });
         }
         rockerview.setOnAngleChangeListener(this);
-
     }
 
 
@@ -150,7 +149,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getLongPress(LongPressPositionEntity longPressPositionEntity) {
         if (longPressPositionEntity != null) {
-            //
         }
     }
 
@@ -250,13 +248,14 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     protected void onResume() {
         super.onResume();
-        byte[] mapBytes = FileUtil.readPng("map.png", this);
+        byte[] mapBytes = FileUtil.readPng("map.png");
         if (mapBytes != null) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
             mapView.setMap(bitmap);
         }
     }
 
+    // 充电状态
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void getCharge_Status(Charge_status charge_status) {
         if (charge_status != null && !charge_status.getMac_address().equals("")) {
@@ -265,6 +264,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
 
+    // 所有地图的信息
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllMapInfo(All_map_info allMapInfo) {
         if (allMapInfo != null) {

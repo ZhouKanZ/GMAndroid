@@ -2,6 +2,8 @@ package com.jms.cleanse.contract;
 
 import com.jms.cleanse.base.IView;
 
+
+
 /**
  * Created by zhoukan on 2018/4/10.
  *
@@ -10,7 +12,7 @@ import com.jms.cleanse.base.IView;
 
 public class PathEditContract {
 
-    public interface View extends IView{
+    public interface View extends IView {
         // 隐藏左侧布局
         void hideLeftLayout();
         // 显示左侧布局

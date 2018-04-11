@@ -46,11 +46,6 @@ public class UItestActivity extends AppCompatActivity {
         setContentView(R.layout.activity_uitest);
         ButterKnife.bind(this);
 
-//        MySurfaceView3 sfv = findViewById(R.id.sfv);
-//        @SuppressLint("ResourceType") InputStream is = getResources().openRawResource(R.drawable.map_test);
-//        Bitmap bitmap = BitmapFactory.decodeStream(is);
-//        sfv.setBitmap(bitmap);
-
         mapView = findViewById(R.id.map_view);
 
 //        testPOIS = new ArrayList<>();
@@ -66,7 +61,7 @@ public class UItestActivity extends AppCompatActivity {
         mapView.setOnClickListener(new JMMapView.OnClickListener() {
             @Override
             public void onPointClick(TestPOI poi, int pos) {
-                Log.d("xxx", "onPointClick:  i had been clicked" );
+                Log.d("xxx", "onPointClick:  i had been clicked");
             }
 
             @Override

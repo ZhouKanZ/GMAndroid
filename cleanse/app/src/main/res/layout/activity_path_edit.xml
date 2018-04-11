@@ -43,9 +43,10 @@
 
 
         <TextView
+
             android:id="@+id/tv_cleanse_notice"
             android:layout_width="match_parent"
-            android:text="@string/cleanse_notice"
+            android:text="@string/isCleanse"
             android:layout_height="24dp"
             android:background="@drawable/btn_cleanse_spec_background_selector"
             android:textColor="@color/colorToolbarTitle"
@@ -63,7 +64,7 @@
             android:id="@+id/btn_add"
             android:layout_width="match_parent"
             android:layout_height="24dp"
-            android:text="@string/addpoint"
+            android:text="@string/add"
             android:background="@drawable/btn_cleanse_spec_background_selector"
             android:textColor="@color/colorToolbarTitle"
             android:textSize="@dimen/text_size_12sp"
@@ -73,7 +74,7 @@
             android:id="@+id/btn_end"
             android:layout_width="match_parent"
             android:layout_height="24dp"
-            android:text="@string/end"
+            android:text="@string/path_end"
             android:background="@drawable/btn_cleanse_spec_background_selector"
             android:textColor="@color/colorToolbarTitle"
             android:textSize="@dimen/text_size_12sp"
@@ -97,6 +98,7 @@
         android:textSize="@dimen/text_size_12sp"
         android:textColor="@color/colorToolbarTitle"
         android:elevation="1dp"
+        android:layout_centerHorizontal="true"
         />
 
 

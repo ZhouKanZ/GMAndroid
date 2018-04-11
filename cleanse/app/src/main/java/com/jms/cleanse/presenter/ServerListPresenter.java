@@ -17,6 +17,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +51,7 @@ import robot.boocax.com.sdkmodule.view.BoocaxMapView;
 
 public class ServerListPresenter extends BasePresenter<ServerListContract.ServerListView> implements ServerListContract.Presenter {
 
+    private static final String TAG = "ServerListPresenter";
     public static SharedPreferences sp_curDoc;
     public static SharedPreferences.Editor editor_curDoc;//用于记录文件(服务器传来)
 
@@ -62,14 +64,13 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
     }
 
 
-
     /**
      * 实例化数据
      */
     @Override
     public void initData() {
         configuration();//配置页面
-        configuredView();//配置地图控件
+//        configuredView();//配置地图控件
 
         TCP_CONN.reconnTime = 5000;               //重连时间(不设置默认5000ms,上层可更改,建议3000ms以上).
     }
@@ -131,19 +132,35 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
         LoginEntity.recvFileTypes.add("anchor.dat");
         LoginEntity.recvFileTypes.add("poi.json");
         LoginEntity.recvFileTypes.add("agv_graph.json");//定义Android客户端接收的文件类型,SDK使用者根据自身客户端功能选择需要接收的文件
+
+        initCustomFile();//创建自定义的路径任务文件
     }
 
+    private void initCustomFile(){
+        File file = new File(JMApplication.context.getFilesDir() + "/Boocax/curDoc", "poitask.json");
+
+        if (file.exists() && file.isFile()) {
+//            file.delete();
+        }else {
+            try {
+                if (file.createNewFile()) {
+                    Log.i(TAG, "initData: file is created" + file.getAbsolutePath());
+                }else {
+                    Log.i(TAG, "initData: file create failed");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 //    private void initState() {
 //    }
 
     //开启UDP
     public void startUDP() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                TCP_CONN.isUDP = false;
-                TCP_CONN.getUDPs();
-            }
+        new Thread(() -> {
+            TCP_CONN.isUDP = false;
+            TCP_CONN.getUDPs();
         }).start();
     }
 
@@ -342,6 +359,8 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
             double poseY = pos_vel_status.getPose().getY();
             double poseYaw = pos_vel_status.getPose().getYaw();
 
+
+
             double vx = pos_vel_status.getVel().getVx();
             double vy = pos_vel_status.getVel().getVy();
             double vtheta = pos_vel_status.getVel().getVtheta();
@@ -387,10 +406,9 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
 
     @Override
     public void onCreate() {
-        if (!EventBus.getDefault().isRegistered(this)){
+        if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
-
     }
 
     @Override

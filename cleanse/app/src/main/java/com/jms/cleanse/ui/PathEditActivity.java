@@ -15,8 +15,8 @@ import android.widget.TextView;
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.contract.PathEditContract;
+import com.jms.cleanse.entity.db.PoiTask;
 import com.jms.cleanse.entity.uiTest.PointSpec;
-import com.jms.cleanse.entity.uiTest.TaskEntity;
 import com.jms.cleanse.presenter.PathEditPresenter;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.JMMapView;
@@ -25,6 +25,7 @@ import com.zhy.adapter.recyclerview.base.ViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -36,12 +37,12 @@ import butterknife.OnClick;
 public class PathEditActivity extends BaseActivity<PathEditPresenter> implements PathEditContract.View {
 
 
-    CommonAdapter<TaskEntity> adapter;
+    CommonAdapter<PoiTask> adapter;
     //    CommonAdapter<PointSpec> pointSpecCommonAdapter;
     RecyclerView.Adapter pointSpecCommonAdapter;
 
     List<PointSpec> specs;
-    List<TaskEntity> taskEntities;
+    List<PoiTask> taskEntities;
     @BindView(R.id.iv_exit)
     ImageView ivExit;
     @BindView(R.id.btn_start_task)
@@ -87,19 +88,13 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         taskListController = ButterKnife.findById(taskListLayout, R.id.layout_task_controller);
 
         taskEntities = new ArrayList<>();
-        taskEntities.add(new TaskEntity("大厅清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("厕所清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("卫生间清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("茅坑清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("洗手间清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("浴室清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
+//        mPresenter.objectBoxTest();
+        taskEntities = mPresenter.loadData();
 
-        adapter = new CommonAdapter<TaskEntity>(this, R.layout.item_task_info, taskEntities) {
+        adapter = new CommonAdapter<PoiTask>(this, R.layout.item_task_info, taskEntities) {
             @Override
-            protected void convert(ViewHolder holder, TaskEntity taskEntity, int position) {
-                holder.setText(R.id.tv_task_name, taskEntity.getTaskName());
-                holder.setText(R.id.tv_task_location, taskEntity.getLocation());
-                holder.setText(R.id.tv_create_date, taskEntity.getCreateTime());
+            protected void convert(ViewHolder holder,PoiTask poiTask, int position) {
+                holder.setText(R.id.tv_task_name, poiTask.name);
             }
         };
 
@@ -138,6 +133,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 this.finish();
                 break;
             case R.id.btn_start_task:
+                mPresenter.executeTask("test");
                 break;
             case R.id.iv_task_delete: // 删除任务
                 break;
@@ -165,7 +161,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
 
     @Override
     public void loadMap() {
-        byte[] mapBytes = FileUtil.readPng("map.png", this);
+        byte[] mapBytes = FileUtil.readPng("map.png");
         if (mapBytes != null) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
             mapView.setMap(bitmap);

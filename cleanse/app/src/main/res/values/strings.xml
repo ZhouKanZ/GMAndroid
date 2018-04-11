@@ -14,7 +14,7 @@
     <string name="start_task">开始路径</string>
     <string name="empty_notice">账号或密码不可以为空</string>
     <string name="error_login">用户名或密码错误请重新输入</string>
-    <string name="cleanse_notice">消毒</string>
-    <string name="addpoint">添加</string>
-    <string name="end">设置为终点</string>
+    <string name="isCleanse">消毒点</string>
+    <string name="add">添加</string>
+    <string name="path_end">设置终点</string>
 </resources>
