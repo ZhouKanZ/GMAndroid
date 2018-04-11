@@ -19,18 +19,61 @@
         android:layout_marginTop="17dp"
         />
 
-    <android.support.v7.widget.RecyclerView
+    <LinearLayout
         android:id="@+id/point_control_rv"
         android:layout_width="80dp"
-        android:layout_height="287dp"
+        android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:background="@drawable/master_slider_background"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"
         android:paddingTop="31dp"
+        android:paddingBottom="31dp"
         android:elevation="1dp"
-        />
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:text="@string/isCleanse"
+            android:background="@drawable/btn_cleanse_spec_background_selector"
+            android:textColor="@color/colorToolbarTitle"
+            android:textSize="@dimen/text_size_12sp"
+            android:gravity="center"
+            />
+
+        <Switch
+            android:id="@+id/switch_cleanse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:background="@drawable/btn_cleanse_spec_background_selector"
+            android:textColor="@color/colorToolbarTitle"
+            android:textSize="@dimen/text_size_12sp"
+            android:gravity="center"
+            android:text="@string/add"
+            />
+
+        <Button
+            android:id="@+id/btn_end"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:background="@drawable/btn_cleanse_spec_background_selector"
+            android:textColor="@color/colorToolbarTitle"
+            android:textSize="@dimen/text_size_12sp"
+            android:gravity="center"
+            android:text="@string/path_end"
+            android:layout_marginTop="30dp"
+            />
+
+    </LinearLayout>
 
     <!-- 任务开始按钮 -->
     <Button
@@ -40,11 +83,11 @@
         android:text="@string/start_task"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="20dp"
-        android:layout_marginLeft="360dp"
         android:background="@drawable/btn_task_start_selector"
         android:textSize="@dimen/text_size_12sp"
         android:textColor="@color/colorToolbarTitle"
         android:elevation="1dp"
+        android:layout_centerHorizontal="true"
         />
 
     <ImageView

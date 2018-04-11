@@ -10,7 +10,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
 import com.jms.cleanse.R;
@@ -34,14 +33,17 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.analysis_data.LaserEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.LongPressPositionEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ShortPressScreenPosition;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.TempMapBytes;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
 public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
@@ -91,11 +93,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             public void run() {
                 int layoutWidth = layoutRobotMaster.getMeasuredWidth();
                 int layoutHeight = layoutRobotMaster.getMeasuredHeight();
-
                 float toolBarHeight = DisplayUtil.dip2px(RobotMasterActivity.this, 33);
-
                 Log.d("measure", "run: w :" + layoutWidth + ",h:" + (layoutHeight - toolBarHeight));
-
             }
         });
 
@@ -106,32 +105,22 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         testPOIS.add(new TestPOI(0.3, -2.65, false));
         testPOIS.add(new TestPOI(0, -1.15, false));
         mapView.setTestPOIS(testPOIS);
-
+        byte[] mapBytes = FileUtil.readPng("map.png");
+        if (mapBytes != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
+            mapView.setMap(bitmap);
+        }
     }
 
     @Override
     protected void initListeners() {
 
         if (popupWindow != null) {
-            popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
-                @Override
-                public void onDismiss() {
-                    layoutRightSider.setVisibility(View.VISIBLE);
-                }
-            });
-
-            popupWindow.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    popupWindow.dismiss();
-                }
-            });
+            popupWindow.setOnDismissListener(() -> layoutRightSider.setVisibility(View.VISIBLE));
+            popupWindow.setOnClickListener(v -> popupWindow.dismiss());
         }
-
         rockerview.setOnAngleChangeListener(this);
-
     }
-
 
 
     @Override
@@ -155,10 +144,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 layoutRightSider.setVisibility(View.GONE);
                 break;
             case R.id.ib_server_list:
-                // 绘制point
-//                BoocaxMapView.userShowPoi("p1",false);
-//                SurfaceView poi = new POIPoint(this);
-//                mapView.addView(poi, ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
                 break;
         }
     }
@@ -169,7 +154,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getLongPress(LongPressPositionEntity longPressPositionEntity) {
         if (longPressPositionEntity != null) {
-            //
         }
     }
 
@@ -241,14 +225,16 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
             mapView.setPos(pos_vel_status.getPose());
             // 更新机器人位置
-            Log.d(TAG, "getVelPose: x" + poseX + "y"+poseY);
+            Log.d(TAG, "getVelPose: x" + poseX + "y" + poseY);
         }
     }
 
 
     /**
-     *
-     * @param angle 角度[0,360)
+     * @param angle  角度[0,360)
+     *               =======
+     * @param angle  角度[0,360)
+     *               >>>>>>> a585904637a529179371c4e1aee7e5e00e0a528d
      * @param length [0,R-r]
      */
     @Override
@@ -259,7 +245,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         speed[1] = 0;
         // 机器人的角速度
         speed[2] = Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED;
-        Log.d(TAG, "change: vx:"+"angle:"+angle+"length:"+length + speed[0] + "vy:"+speed[1]+"vr:"+speed[2]);
+        Log.d(TAG, "change: vx:" + "angle:" + angle + "length:" + length + speed[0] + "vy:" + speed[1] + "vr:" + speed[2]);
     }
 
     @Override
@@ -270,15 +256,14 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     protected void onResume() {
         super.onResume();
-//        mapView.parse();                                                  //读取地图文件
-//        mapView.setMapMode(CoverageMode.MODE_SHOWMAP).loadMapViews(SystemUtils.getTargetVersion());//加载BoocaxMapView的布局.
-        byte[] mapBytes = FileUtil.readPng("map.png",this);
-        if (mapBytes != null){
-            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes,0,mapBytes.length);
+        byte[] mapBytes = FileUtil.readPng("map.png");
+        if (mapBytes != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
             mapView.setMap(bitmap);
         }
     }
 
+    // 充电状态
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void getCharge_Status(Charge_status charge_status) {
         if (charge_status != null && !charge_status.getMac_address().equals("")) {
@@ -287,6 +272,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
 
+    // 所有地图的信息
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllMapInfo(All_map_info allMapInfo) {
         if (allMapInfo != null) {
@@ -295,6 +281,32 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         }
     }
 
+    /**
+     * map图片byte[]
+     */
+    @Subscribe(threadMode = ThreadMode.POSTING, sticky = true)
+    public void getMapBytes(final TempMapBytes tempMapBytes) {
+        if (tempMapBytes != null) {
+            byte[] bytes = tempMapBytes.getBytes();
+            //对bytes进行处理
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    APPSend.exeRepairPic(tempMapBytes.getBytes());
+                }
+            }).start();
+        }
+    }
+
+    /**
+     * OBD信息
+     */
+    @Subscribe(threadMode = ThreadMode.POSTING)
+    public void getOBD(OBD obd) {
+        if (obd != null) {
+
+        }
+    }
 
 
     @Override

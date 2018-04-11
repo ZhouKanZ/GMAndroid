@@ -8,10 +8,12 @@ import android.widget.ImageView;
 
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
-import com.jms.cleanse.base.IPresenter;
+import com.jms.cleanse.contract.PathEditContract;
+import com.jms.cleanse.entity.db.PoiTask;
 import com.jms.cleanse.entity.uiTest.PointSpec;
-import com.jms.cleanse.entity.uiTest.TaskEntity;
+import com.jms.cleanse.presenter.PathEditPresenter;
 import com.zhy.adapter.recyclerview.CommonAdapter;
+import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
 
 import java.util.ArrayList;
@@ -20,14 +22,13 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.OnClick;
 
-public class PathEditActivity extends BaseActivity {
+public class PathEditActivity extends BaseActivity<PathEditPresenter> implements PathEditContract.PathEditView{
 
-
-    CommonAdapter<TaskEntity> adapter;
+    CommonAdapter<PoiTask> adapter;
     CommonAdapter<PointSpec> pointSpecCommonAdapter;
 
     List<PointSpec> specs;
-    List<TaskEntity> taskEntities;
+    List<PoiTask> taskEntities;
     @BindView(R.id.iv_exit)
     ImageView ivExit;
     @BindView(R.id.point_control_rv)
@@ -42,8 +43,8 @@ public class PathEditActivity extends BaseActivity {
     ImageView ivTaskAdd;
 
     @Override
-    protected IPresenter loadPresenter() {
-        return null;
+    protected PathEditPresenter loadPresenter() {
+        return new PathEditPresenter();
     }
 
     @Override
@@ -53,20 +54,15 @@ public class PathEditActivity extends BaseActivity {
 
     @Override
     protected void initData() {
-        taskEntities = new ArrayList<>();
-        taskEntities.add(new TaskEntity("大厅清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("厕所清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("卫生间清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("茅坑清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("洗手间清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
-        taskEntities.add(new TaskEntity("浴室清扫任务", "三楼大厅", "2018-3-22(周二) 14:00", false));
 
-        adapter = new CommonAdapter<TaskEntity>(this, R.layout.item_task_info, taskEntities) {
+        taskEntities = new ArrayList<>();
+//        mPresenter.objectBoxTest();
+        taskEntities = mPresenter.loadData();
+
+        adapter = new CommonAdapter<PoiTask>(this, R.layout.item_task_info, taskEntities) {
             @Override
-            protected void convert(ViewHolder holder, TaskEntity taskEntity, int position) {
-                holder.setText(R.id.tv_task_name, taskEntity.getTaskName());
-                holder.setText(R.id.tv_task_location, taskEntity.getLocation());
-                holder.setText(R.id.tv_create_date, taskEntity.getCreateTime());
+            protected void convert(ViewHolder holder,PoiTask poiTask, int position) {
+                holder.setText(R.id.tv_task_name, poiTask.name);
             }
         };
 
@@ -82,6 +78,21 @@ public class PathEditActivity extends BaseActivity {
                 holder.setText(R.id.btn_control_spec, pointSpec.getName());
             }
         };
+
+        pointSpecCommonAdapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
+                switch (position) {
+                    case 0:
+
+                }
+            }
+
+            @Override
+            public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
+                return false;
+            }
+        });
 
     }
 
@@ -103,10 +114,12 @@ public class PathEditActivity extends BaseActivity {
                 this.finish();
                 break;
             case R.id.btn_start_task:
+                mPresenter.executeTask("test");
                 break;
             case R.id.iv_task_delete:
                 break;
             case R.id.iv_task_add:
+                mPresenter.objectBoxTest();
                 break;
         }
     }
