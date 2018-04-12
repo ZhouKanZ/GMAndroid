@@ -91,5 +91,8 @@ public class BatteryBar extends View {
                 getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));
     }
 
-
+    public void updateCharge(float currentBattery){
+        this.currentBattery = currentBattery;
+        invalidate();
+    }
 }
