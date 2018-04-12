@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -404,8 +405,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllThumbnailMap(ThumbnailCache thumbnailCache) {
 
-        byte[] bytes = thumbnailCache.getThumbnail().getContent().getBytes();
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        byte[] decode = Base64.decode(thumbnailCache.getThumbnail().getContent(), Base64.DEFAULT);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(decode, 0, decode.length);
         index++;
         MapTabSpec mapTabSpec = mapTabSpecs.get(index);
         mapTabSpec.setMap(bitmap);
@@ -458,7 +459,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         Log.i(TAG, "getMapBytes: ");
         if (tempMapBytes != null) {
             byte[] bytes = tempMapBytes.getBytes();
-
             Observable.just(BitmapFactory.decodeByteArray(bytes, 0, bytes.length))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())

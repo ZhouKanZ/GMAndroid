@@ -99,6 +99,7 @@
         android:textColor="@color/colorToolbarTitle"
         android:elevation="1dp"
         android:layout_centerHorizontal="true"
+        android:visibility="gone"
         />
 
 

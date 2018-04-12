@@ -1,6 +1,8 @@
 package com.jms.cleanse.util;
 
 import android.content.Context;
+import android.graphics.RectF;
+import android.support.v7.widget.RecyclerView;
 
 import com.jms.cleanse.config.RobotConfig;
 
@@ -64,6 +66,28 @@ public class DisplayUtil {
         double ax = maxX / 2 + ox;
         double ay = maxY / 2 - oy;
         return new double[]{ax,ay};
+    }
+
+    /**
+     * @param x           物理坐标
+     * @param y
+     * @param maxX        像素坐标系最大值
+     * @param maxY
+     * @param pointRadius 点的半径   （ps实际为矩形，但都为正方形，故用radius来表示）
+     * @return [点的矩形区域]
+     */
+    public static RectF getRect(double x, double y, int maxX, int maxY, int pointRadius) {
+        // 转换成中心位置的像素坐标
+//        double[] androidCoor = getAndroidCoordinate(maxX,maxY);
+        double[] androidCoor = getAndroidCoordinate(x,y,maxX,maxY);
+        double ax = androidCoor[0];
+        double ay = androidCoor[1];
+        RectF rect = new RectF();
+        rect.left = (float) (ax - pointRadius);
+        rect.top = (float) (ay - pointRadius);
+        rect.right = (float) (ax + pointRadius );
+        rect.bottom = (float) (ay + pointRadius );
+        return rect;
     }
 
 }

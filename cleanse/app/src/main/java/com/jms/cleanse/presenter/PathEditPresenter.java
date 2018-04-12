@@ -8,7 +8,6 @@ import com.jms.cleanse.base.BasePresenter;
 import com.jms.cleanse.contract.PathEditContract;
 import com.jms.cleanse.entity.db.PoiPoint;
 import com.jms.cleanse.entity.db.PoiTask;
-import com.jms.cleanse.entity.db.PositionBean;
 import com.jms.cleanse.entity.file.POIJson;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.mapview.CustomPOI;
@@ -19,6 +18,7 @@ import java.util.List;
 
 import io.objectbox.Box;
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
@@ -46,35 +46,82 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
 
     }
 
-    public void objectBoxTest() {
+    private void unRegisterEventBus() {
 
-        PoiTask poiTask = new PoiTask();
-        PoiPoint poiPoint2 = new PoiPoint();
-        PoiPoint poiPoint1 = new PoiPoint();
+    }
 
-        PositionBean pb1 = new PositionBean();
-        pb1.x = 0.3;
-        pb1.y = -2.65;
-        pb1.yaw = 0;
+    public void saveTaskToDB(String name,List<PoiPoint> pointList){
 
-        PositionBean pb2 = new PositionBean();
-        pb2.x = -6.7;
-        pb2.y = 0.45;
-        pb2.yaw = 0;
+        PoiTask newTask = new PoiTask();
+        newTask.name = name;
+        for (PoiPoint poi : pointList) {
+            newTask.poiPoints.add(poi);
+        }
+        long id = poiTaskBox.put(newTask);
 
-        poiPoint1.position.setTarget(pb1);
-        poiPoint2.position.setTarget(pb2);
-        poiPoint1.name = "p1";
-        poiPoint1.state = true;
-        poiPoint2.name = "p2";
-        poiPoint2.state = false;
+        // 插入成功
+        if (id > 0){
+            getView().notifyAdapter(newTask);
+        }
 
-        poiTask.poiPoints.add(poiPoint1);
-        poiTask.poiPoints.add(poiPoint2);
-        poiTask.name = "db_test";
+        updatePoiJson(newTask, FileUtil.ADD);
+    }
 
-        poiTaskBox.put(poiTask);
+    /**
+     * 更新poi.json
+     * @param poiTask
+     * @param tag
+     */
+    private void updatePoiJson(PoiTask poiTask, int tag){
 
+        POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
+
+        List<CustomPOI> poiList = new ArrayList<>();
+        List<String> group = new ArrayList<>();
+
+        for (PoiPoint poiPoint : poiTask.poiPoints) {
+
+            CustomPOI customPOI = new CustomPOI();
+            customPOI.setState(poiPoint.state);
+            customPOI.name = poiPoint.name;
+
+            customPOI.position = new Position();
+            customPOI.position.x = poiPoint.position.getTarget().x;
+            customPOI.position.y = poiPoint.position.getTarget().y;
+            customPOI.position.yaw = poiPoint.position.getTarget().yaw;
+            poiList.add(customPOI);
+            group.add(poiPoint.name);
+        }
+
+        switch (tag) {
+            case FileUtil.ADD:
+                poiJson.getPoi_info().addAll(poiList);
+                poiJson.getGroups().put(poiTask.name, group);
+                break;
+            case FileUtil.DELETE:
+                for (CustomPOI customPOI : poiList) {
+                    poiJson.getPoi_info().remove(customPOI);
+                }
+                poiJson.getGroups().remove(poiTask.name);
+                break;
+            case FileUtil.UPDATE:
+                break;
+            default:
+                break;
+        }
+
+        Gson gson = new Gson();
+        Observable.just(gson.toJson(poiJson))
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String content) throws Exception {
+                        APPSend.sendFile(content.getBytes(), FileUtil.POI_JSON);
+                    }
+                });
+
+        Log.i(TAG, "updatePoiJson: json = " + gson.toJson(poiJson));
     }
 
     /**
@@ -113,7 +160,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
             Log.i(TAG, "loadData: null");
             return null;
         }
-//        poiTaskBox.remove(1,2,3,4,5,6,7,8,9);
         List<PoiTask> poiTasks = poiTaskBox.query().build().find();
         return poiTasks;
     }

@@ -133,7 +133,6 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
         LoginEntity.recvFileTypes.add("poi.json");
         LoginEntity.recvFileTypes.add("agv_graph.json");//定义Android客户端接收的文件类型,SDK使用者根据自身客户端功能选择需要接收的文件
 
-        initCustomFile();//创建自定义的路径任务文件
     }
 
     private void initCustomFile(){

@@ -1,7 +1,10 @@
 package com.jms.cleanse.contract;
 
 import com.jms.cleanse.base.IView;
+import com.jms.cleanse.entity.db.PoiPoint;
+import com.jms.cleanse.entity.db.PoiTask;
 
+import java.util.List;
 
 
 /**
@@ -33,9 +36,18 @@ public class PathEditContract {
         void addPoint();
         // 显示地图
         void loadMap();
+        // 显示右侧的布局
+        void showRightLayout();
+        // 隐藏右侧的布局
+        void hideRightLayout();
+
+        void notifyAdapter(PoiTask newTask);
     }
 
     public interface Presenter{
+
+        // 添加到数据库中
+        void saveTaskToDB(String name,List<PoiPoint> pointList);
 
     }
 

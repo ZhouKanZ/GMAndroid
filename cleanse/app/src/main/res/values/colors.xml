@@ -33,4 +33,9 @@
     <color name="colorPathUnCleanse">#8c8d8d</color>
 
 
+    <!-- dialog -->
+    <color name="dialogBackground">#f2f2f2</color>
+
+
+
 </resources>
