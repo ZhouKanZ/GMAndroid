@@ -32,14 +32,12 @@ import com.jms.cleanse.entity.db.PositionBean;
 import com.jms.cleanse.util.DisplayUtil;
 import com.jms.cleanse.widget.mapview.POIConfig;
 import com.jms.cleanse.widget.mapview.ScaleUtils;
-import com.jms.cleanse.widget.mapview.TestPOI;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.objectbox.relation.ToOne;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
 /**
@@ -242,7 +240,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             tranY = dh / (2 * ratio);
             tranX = 0;
         }
-        Log.d(TAG, "canvasChange: " + ratio + "tranX" + tranY + "tranY" + tranY);
+//        Log.d(TAG, "canvasChange: " + ratio + "tranX" + tranY + "tranY" + tranY);
         changeMatrix.reset();
         changeMatrix.preScale(ratio, ratio);
         changeMatrix.preTranslate(tranX, tranY);
@@ -335,7 +333,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
         if (pos != null) {
             double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(pos.getX(), pos.getY(), coodinateX, coodinateY);
-            Log.d(TAG, "drawRobot: x:" + androidRobotPos[0] + "y:" + androidRobotPos[1] + "dx" + (float) (androidRobotPos[0] - robotMap.getWidth() / 2) + "dy:" + (float) (androidRobotPos[1] - robotMap.getHeight() / 2));
+//            Log.d(TAG, "drawRobot: x:" + androidRobotPos[0] + "y:" + androidRobotPos[1] + "dx" + (float) (androidRobotPos[0] - robotMap.getWidth() / 2) + "dy:" + (float) (androidRobotPos[1] - robotMap.getHeight() / 2));
             canvas.drawBitmap(robotMap, (float) (androidRobotPos[0] - (robotMap.getWidth() / 2)), (float) (androidRobotPos[1] - (robotMap.getHeight() / 2)), mPaint);
         }
 
@@ -511,7 +509,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         float[] changePos = new float[]{bitmapPos[0] - coodinateX / 2, coodinateY / 2 - bitmapPos[1]};
         changePos[0] = (float) (changePos[0] * RobotConfig.MAP_SCALE);
         changePos[1] = (float) (changePos[1] * RobotConfig.MAP_SCALE);
-        Log.d(TAG, "convertBitmapPos2PhysicalCoordinate: x:" + changePos[0] + ",y:" + changePos[1]);
+//        Log.d(TAG, "convertBitmapPos2PhysicalCoordinate: x:" + changePos[0] + ",y:" + changePos[1]);
         return changePos;
     }
 
@@ -549,7 +547,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             PoiPoint poiPoint = testPOIS.get(i);
 //            double[] currentPoi = poiPoint.getAndroidCoordinate(coodinateX, coodinateY);
             double[] currentPoi = DisplayUtil.getAndroidCoordinate(poiPoint.position.getTarget().x,poiPoint.position.getTarget().y,coodinateX,coodinateY);
-            Log.d(TAG, "getPathList: x:" + currentPoi[0] + ",y:" + currentPoi[1]);
+//            Log.d(TAG, "getPathList: x:" + currentPoi[0] + ",y:" + currentPoi[1]);
             if (lastPoi != null) {
                 Path p = new Path();
                 p.moveTo((float) lastPoi[0], (float) lastPoi[1]);
