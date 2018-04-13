@@ -58,6 +58,9 @@ public class PathEditContract {
         // 删除任务
         void removeData(PoiTask task);
 
+        // 同步本地与服务器数据
+        List<PoiTask> synchronousData();
+
     }
 
 }
