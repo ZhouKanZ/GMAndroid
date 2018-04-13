@@ -42,7 +42,6 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     Disposable loopDispose;
 
     private List<MapTabSpec> mapTabSpecs;
-    private List<Bitmap> thumbnailMaps;
     @Override
     public void onCreate() {
 
@@ -56,7 +55,6 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
 
     public void initData(){
         mapTabSpecs = new ArrayList<>();
-        thumbnailMaps = new ArrayList<>();
     }
 
     @Override

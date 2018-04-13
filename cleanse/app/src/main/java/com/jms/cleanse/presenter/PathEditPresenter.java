@@ -30,7 +30,7 @@ import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
  * Created by WangJun on 2018/4/9.
  */
 
-public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
+public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
 
     private static final String TAG = "PathEditPresenter";
     private Box<PoiTask> poiTaskBox;
@@ -67,6 +67,11 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
         updatePoiJson(newTask, FileUtil.ADD);
     }
 
+    public void deletePoiTaskDB(long id){
+
+        Box<PoiTask> poiTaskBox = JMApplication.getBoxStore().boxFor(PoiTask.class);
+        poiTaskBox.remove(id);
+    }
     /**
      * 更新poi.json
      * @param poiTask
