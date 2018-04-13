@@ -6,7 +6,9 @@ import com.google.gson.Gson;
 import com.jms.cleanse.JMApplication;
 import com.jms.cleanse.base.BasePresenter;
 import com.jms.cleanse.contract.PathEditContract;
+import com.jms.cleanse.entity.db.PoiPoint;
 import com.jms.cleanse.entity.db.PoiTask;
+import com.jms.cleanse.entity.db.PositionBean;
 import com.jms.cleanse.entity.file.POIJson;
 import com.jms.cleanse.entity.file.POIPoint;
 import com.jms.cleanse.entity.file.POITask;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.objectbox.Box;
+import io.objectbox.BoxStore;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -63,7 +66,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
     public void saveTaskToDB(String name, List<POIPoint> pointList) {
 
         // 为每一个点添加名字  名字的规则 name+index
-
         POITask newTask = new POITask();
         newTask.setName(name);
         for (int i = 0; i <pointList.size() ; i++) {
@@ -73,7 +75,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
         }
 //        long id = poiTaskBox.put(newTask);
 //        Log.d(TAG, "saveTaskToDB:  id:"+id);
-
         getView().notifyAdapter(newTask);
         updatePoiJson(newTask,FileUtil.ADD);
         // 插入成功
@@ -145,23 +146,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
                 .subscribe(content -> APPSend.sendFile(content.getBytes(), FileUtil.POI_JSON));
 
         Log.i(TAG, "updatePoiJson: json = " + gson.toJson(poiJson));
-    }
-
-    /**
-     * 执行巡航任务
-     *
-     * @param taskName group名字
-     */
-    public void executeTask(String taskName) {
-
-//        Observable.just(taskName)
-//                .observeOn(Schedulers.io())
-//                .subscribe(new Consumer<String>() {
-//                    @Override
-//                    public void accept(String s) throws Exception {
-//                        APPSend.sendOrder_roaming(LoginEntity.robotMac, taskName, 1, "false");
-//                    }
-//                });
     }
 
     /**
@@ -270,15 +254,70 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
     }
 
     /**
-     *  从数据库中一处数据
+     * 从数据库中一处数据,同时删除远程仓库的数据
+     *
      * @param task
      */
     @Override
-    public void removeData(PoiTask task){
-//        poiTaskBox.remove(task);
+    public void removeData(POITask task) {
 
-        // 通知adapter发生变化
-        // getView().notifyAdapter();
+//        poiTaskBox.remove(task);
+        // 操作 重新读取poiJson
+        updatePoiJson(task, FileUtil.DELETE);
+
+    }
+
+    @Override
+    public List<PoiTask> synchronousData() {
+
+        List<PoiTask> poiTasks = new ArrayList<>();
+        // 异步操作
+        POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
+        // 内容可能为空
+        List<CustomPOI> customPois = poiJson.getPoi_info();
+        Map<String, List<String>> groups = poiJson.getGroups();
+
+        BoxStore boxStore = JMApplication.getBoxStore();
+        Box<PoiTask> box = boxStore.boxFor(PoiTask.class);
+
+        // 数据存在且有意义的时候
+        if (customPois.size() > 0 && groups.size() > 0) {
+
+            for (String groupName : groups.keySet()) {
+
+                List<PoiPoint> poiPoints = new ArrayList<>();
+                PoiTask poiTask = new PoiTask();
+
+
+                // 将所有符合条件的点加入PoiPoint中
+                for (CustomPOI poi : customPois) {
+
+                    Log.d(TAG, "synchronousData: " + poi.name + ",groupName:"+groupName);
+                    // 包含group的名字表示为是同一个任务的点
+                    if (poi.name.contains(groupName)) {
+                        PoiPoint poiPoint = new PoiPoint();
+                        poiPoint.name = poi.name;
+                        PositionBean pb = new PositionBean();
+                        pb.x = poi.position.x;
+                        pb.y = poi.position.y;
+                        pb.yaw = poi.position.yaw;
+                        poiPoint.position.setTarget(pb);
+                        poiPoints.add(poiPoint);
+                    }
+
+                }
+
+                poiTask.name = groupName;
+                poiTask.poiPoints.addAll(poiPoints);
+                // 将poiTask存入数据库中
+                box.put(poiTask);
+                poiTasks.add(poiTask);
+            }
+        }
+
+        List<PoiPoint> poiPoints = poiTasks.get(0).poiPoints;
+        Log.d(TAG, "synchronousData: " + poiTasks.size() + "single0 : (x,y) + (" + poiPoints.get(0).position.getTarget().x+","+poiPoints.get(0).position.getTarget().y+")");
+        return poiTasks;
     }
 
     /**
@@ -286,7 +325,7 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllMapInfo(AllMapInfo allMapInfo) {
-        if (allMapInfo != null){
+        if (allMapInfo != null) {
             Log.d(TAG, "getAllMapInfo: " + allMapInfo.getCurrent_map_info().getUuid());
         }
     }

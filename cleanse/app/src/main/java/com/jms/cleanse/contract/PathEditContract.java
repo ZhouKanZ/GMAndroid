@@ -57,7 +57,10 @@ public class PathEditContract {
         void saveTaskToDB(String name,List<POIPoint> pointList);
 
         // 删除任务
-        void removeData(PoiTask task);
+        void removeData(POITask task);
+
+        // 同步本地与服务器数据
+        List<PoiTask> synchronousData();
 
     }
 
