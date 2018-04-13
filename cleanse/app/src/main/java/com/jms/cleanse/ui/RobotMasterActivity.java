@@ -7,21 +7,27 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.config.RobotConfig;
 import com.jms.cleanse.contract.RobotMasterContract;
+import com.jms.cleanse.entity.file.POIJson;
+import com.jms.cleanse.entity.file.POITask;
 import com.jms.cleanse.entity.map.MapTabSpec;
 import com.jms.cleanse.entity.robot.LaserEntity;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
 import com.jms.cleanse.util.DisplayUtil;
+import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.BatteryBar;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.MapSelectPopupWindow;
@@ -42,6 +48,8 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import robot.boocax.com.sdkmodule.APPSend;
+import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.LongPressPositionEntity;
@@ -54,12 +62,15 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
+
+
 public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         implements RockerView.OnAngleChangeListener,
         RobotMasterContract.View {
 
 
     private static final String TAG = "RobotMasterActivity";
+    private static final int REQUEST_CODE = 0X01;
 
     @BindView(R.id.ib_task_list)
     ImageView ibTaskList;
@@ -92,6 +103,12 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     List<TestPOI> testPOIS;
 
     double[] speed = new double[3];
+    @BindView(R.id.tv_master_model)
+    TextView tvMasterModel;
+    @BindView(R.id.switch_upper_computer)
+    Switch switchUpperComputer;
+    @BindView(R.id.iv_urgent)
+    ImageView ivUrgent;
     private All_map_info allMapInfo;
     private List<MapTabSpec> mapTabSpecs;
 
@@ -111,7 +128,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mPresenter.initData();
         mapTabSpecs = new ArrayList<>();
         popupWindow = new MapSelectPopupWindow(this);
-        EventBus.getDefault().register(this);
+//        EventBus.getDefault().register(this);
+
         layoutRobotMaster.post(new Runnable() {
             @Override
             public void run() {
@@ -132,6 +150,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                     layoutRightSider.setVisibility(View.VISIBLE);
                 }
             });
+
             popupWindow.setOnClickListener(new MapSelectPopupWindow.OnClickListener() {
                 @Override
                 public void onClick(int position) {
@@ -140,6 +159,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 }
             });
         }
+
         rockerview.setOnAngleChangeListener(this);
     }
 
@@ -147,7 +167,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
+//        EventBus.getDefault().unregister(this);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -155,7 +175,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.ib_task_list:
-                startActivity(new Intent(RobotMasterActivity.this, PathEditActivity.class));
+                // START ACTIVITY FOR RESULT ....
+                startActivityForResult(new Intent(RobotMasterActivity.this, PathEditActivity.class), REQUEST_CODE);
                 break;
             case R.id.ib_map_list:
                 // 唤起popwindow
@@ -271,14 +292,35 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     @Override
     public void onFinish() {
+        speed[0] = 0;
+        // vy 没有意义 设置为0
+        speed[1] = 0;
+        // 机器人的角速度
+        speed[2] = 0;
         mPresenter.cancelLoop();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        EventBus.getDefault().register(this);
         loadMap();
+        Log.d(TAG, "onResume: ");
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        EventBus.getDefault().unregister(this);
+        Log.d(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(TAG, "onRestart: ");
+    }
+
 
     private void loadMap() {
         mapView.setMap(mPresenter.loadMapPng());
@@ -365,6 +407,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             popupWindow.notifyAdapter(mapTabSpecs);
         }
 
+
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
@@ -423,9 +466,153 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         }
     }
 
+
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void getConnectState(ReconnReason reason) {
 
         Log.i(TAG, "getConnectState: " + reason.getReason());
     }
+
+    /**
+     * 接收返回的数据
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+
+            String taskName = data.getStringExtra(PathEditActivity.KEY_TASK_NAME);
+            Log.d(TAG, "onActivityResult: " + taskName);
+            queryTask(taskName);
+
+        }
+
+    }
+
+    /**
+     * 查询任务
+     *
+     * @param taskName
+     */
+    private void queryTask(String taskName) {
+
+        Log.d(TAG, "queryTask: " + taskName);
+/*        Box<PoiTask> box = JMApplication.getBoxStore().boxFor(PoiTask.class);
+        Query<PoiTask> query = box.query().equal(PoiTask_.name, taskName).build();
+        PoiTask poiTask = query.findFirst();
+
+        List<PoiPoint> points = poiTask.poiPoints;
+        showTaskPath(points, poiTask.name);*/
+
+        POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
+        for (POITask task : poiJson.getTasks()) {
+            if (taskName.equals(task.getName())){
+                showTaskPath(task.getPoiPoints(),taskName);
+                return;
+            }
+        }
+
+    }
+
+    /**
+     * 执行任务
+     */
+    private void executeTask(String taskName) {
+
+        Observable.just(taskName)
+                .observeOn(Schedulers.io())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+                        APPSend.sendOrder_roaming(LoginEntity.robotMac, taskName, 1, "false");
+                    }
+                });
+
+    }
+
+    /**
+     *
+     * @param mode 0 1 分别表示 手动模式和自动模式
+     */
+    private void switchMode(int mode) {
+        if (mode == 0){
+            tvMasterModel.setText(R.string.manualMode);
+        }else {
+            tvMasterModel.setText(R.string.automaticMode);
+        }
+
+
+    }
+
+
+
+
+    /**
+     *
+     * @param enable
+     */
+    private void enableSilder(boolean enable){
+        layoutRightSider.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return enable;
+            }
+        });
+    }
+
+    // 显示急停按钮
+    private void showUrgentImage() {
+        ivUrgent.setVisibility(View.VISIBLE);
+    }
+
+    private void hideRockerView() {
+        rockerview.setVisibility(View.GONE);
+    }
+
+    /**
+     * 显示任务路径
+     */
+    private void showTaskPath(List<com.jms.cleanse.entity.file.POIPoint> points, String taskName) {
+        mapView.setTestPOIS(points);
+        switchMode(1);
+        executeTask(taskName);
+        // 隐藏操作轮盘
+        hideRockerView();
+        showUrgentImage();
+        enableSilder(false);
+    }
+
+
+    @OnClick(R.id.iv_urgent)
+    public void onViewClicked() {
+        mPresenter.cancelGoal();
+        // 将rockerView
+        showRockerView();
+        switchMode(0);
+        hideUrgentImage();
+        clearPath();
+        enableSilder(true);
+    }
+
+
+    /**
+     *  清空路径
+     */
+    private void clearPath() {
+        mapView.setTestPOIS(null);
+    }
+
+    private void hideUrgentImage() {
+        ivUrgent.setVisibility(View.GONE);
+    }
+
+    private void showRockerView() {
+        rockerview.setVisibility(View.VISIBLE);
+    }
+
 }

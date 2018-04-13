@@ -16,7 +16,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -27,19 +26,17 @@ import com.alexvasilkov.gestures.animation.ViewPositionAnimator;
 import com.alexvasilkov.gestures.views.interfaces.AnimatorView;
 import com.alexvasilkov.gestures.views.interfaces.GestureView;
 import com.jms.cleanse.config.RobotConfig;
-import com.jms.cleanse.entity.db.PoiPoint;
-import com.jms.cleanse.entity.db.PositionBean;
+import com.jms.cleanse.entity.file.POIPoint;
 import com.jms.cleanse.util.DisplayUtil;
 import com.jms.cleanse.widget.mapview.POIConfig;
 import com.jms.cleanse.widget.mapview.ScaleUtils;
-import com.jms.cleanse.widget.mapview.TestPOI;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.objectbox.relation.ToOne;
+import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
 /**
@@ -72,7 +69,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     private SurfaceHolder holder;
     private Thread t;
     private boolean isDrawing = false;
-    private List<PoiPoint> testPOIS;
+    private List<POIPoint> testPOIS;
     private LinkedList<Path> paths;                         // 路径的集合
     private LinkedList<RectF> points;                       // 点对应的矩形区域
     private Pos_vel_status.pose pos;                        // 机器人位置
@@ -242,7 +239,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             tranY = dh / (2 * ratio);
             tranX = 0;
         }
-        Log.d(TAG, "canvasChange: " + ratio + "tranX" + tranY + "tranY" + tranY);
+//        Log.d(TAG, "canvasChange: " + ratio + "tranX" + tranY + "tranY" + tranY);
         changeMatrix.reset();
         changeMatrix.preScale(ratio, ratio);
         changeMatrix.preTranslate(tranX, tranY);
@@ -306,12 +303,12 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
      */
     private void drawPoi() {
 
-        PoiPoint lastPoi = null;
+        POIPoint lastPoi = null;
         for (int i = 0; i < testPOIS.size(); i++) {
-            PoiPoint poiPoint = testPOIS.get(i);
-            if (poiPoint.state) {
+            POIPoint poiPoint = testPOIS.get(i);
+            if (poiPoint.isState()) {
                 canvas.drawBitmap(cleanseRes, null, points.get(i), mPaint);
-            } else if (lastPoi != null && lastPoi.state) {
+            } else if (lastPoi != null && lastPoi.isState()) {
                 canvas.drawBitmap(cleanseRes, null, points.get(i), mPaint);
             } else {
                 canvas.drawBitmap(unCleanseRes, null, points.get(i), mPaint);
@@ -319,7 +316,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             lastPoi = poiPoint;
 
             if (!isTaskEditing) {
-                double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(poiPoint.position.getTarget().x, poiPoint.position.getTarget().y, coodinateX, coodinateY);
+                double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(poiPoint.getPosition().x, poiPoint.getPosition().y, coodinateX, coodinateY);
                 /* 绘制起点和终点 */
                 if (i == 0) {
                     canvas.drawBitmap(pathStartRes, (float) (androidRobotPos[0] - pathStartRes.getWidth() / 2), (float) (androidRobotPos[1] - pathStartRes.getHeight()), mPaint);
@@ -335,7 +332,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
         if (pos != null) {
             double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(pos.getX(), pos.getY(), coodinateX, coodinateY);
-            Log.d(TAG, "drawRobot: x:" + androidRobotPos[0] + "y:" + androidRobotPos[1] + "dx" + (float) (androidRobotPos[0] - robotMap.getWidth() / 2) + "dy:" + (float) (androidRobotPos[1] - robotMap.getHeight() / 2));
+//            Log.d(TAG, "drawRobot: x:" + androidRobotPos[0] + "y:" + androidRobotPos[1] + "dx" + (float) (androidRobotPos[0] - robotMap.getWidth() / 2) + "dy:" + (float) (androidRobotPos[1] - robotMap.getHeight() / 2));
             canvas.drawBitmap(robotMap, (float) (androidRobotPos[0] - (robotMap.getWidth() / 2)), (float) (androidRobotPos[1] - (robotMap.getHeight() / 2)), mPaint);
         }
 
@@ -367,12 +364,12 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
         getPathList(this.testPOIS);
         for (int i = 0; i < testPOIS.size(); i++) {
-            PoiPoint poiPoint = testPOIS.get(i);
+            POIPoint poiPoint = testPOIS.get(i);
             // 最后一个点 直接跳出循环
             if (i == testPOIS.size() - 1) {
                 break;
             }
-            if (poiPoint.state) {
+            if (poiPoint.isState()) {
                 mPaint.setColor(colorCleanse);
             } else {
                 mPaint.setColor(colorUnCleanse);
@@ -404,10 +401,12 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             changeFlag = true;
     }
 
-    public void setTestPOIS(List<PoiPoint> testPOIS) {
+    public void setTestPOIS(List<POIPoint> testPOIS) {
         if (testPOIS != null && testPOIS.size() > 0) {
             this.testPOIS.clear();
             this.testPOIS.addAll(testPOIS);
+        }else {
+            this.testPOIS.clear();
         }
     }
 
@@ -435,7 +434,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     }
 
     public interface OnClickListener {
-        void onPointClick(PoiPoint poi, int pos);
+        void onPointClick(POIPoint poi, int pos);
         void onPathClick(int pos);
     }
 
@@ -511,7 +510,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         float[] changePos = new float[]{bitmapPos[0] - coodinateX / 2, coodinateY / 2 - bitmapPos[1]};
         changePos[0] = (float) (changePos[0] * RobotConfig.MAP_SCALE);
         changePos[1] = (float) (changePos[1] * RobotConfig.MAP_SCALE);
-        Log.d(TAG, "convertBitmapPos2PhysicalCoordinate: x:" + changePos[0] + ",y:" + changePos[1]);
+//        Log.d(TAG, "convertBitmapPos2PhysicalCoordinate: x:" + changePos[0] + ",y:" + changePos[1]);
         return changePos;
     }
 
@@ -524,13 +523,13 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         }
         float[] tempPos = getCenterFlagOnBitmap();
         tempPos = convertBitmapPos2PhysicalCoordinate(tempPos);
-        PoiPoint tempTestPoi = new PoiPoint(/*tempPos[0], tempPos[1], isCleanse*/);
-        PositionBean position = new PositionBean();
+        POIPoint tempTestPoi = new POIPoint(/*tempPos[0], tempPos[1], isCleanse*/);
+        Position position = new Position();
         position.x = tempPos[0];
         position.y = tempPos[1];
         position.yaw = 0;
-        tempTestPoi.state = isCleanse;
-        tempTestPoi.position.setTarget(position);
+        tempTestPoi.setState(isCleanse);
+        tempTestPoi.setPosition(position);
         testPOIS.add(tempTestPoi);
     }
 
@@ -539,17 +538,17 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
      *
      * @param testPOIS
      */
-    private void getPathList(List<PoiPoint> testPOIS) {
+    private void getPathList(List<POIPoint> testPOIS) {
 
         paths.clear();
         points.clear();
         // 记录上一个点的坐标
         double[] lastPoi = null;
         for (int i = 0; i < testPOIS.size(); i++) {
-            PoiPoint poiPoint = testPOIS.get(i);
+            POIPoint poiPoint = testPOIS.get(i);
 //            double[] currentPoi = poiPoint.getAndroidCoordinate(coodinateX, coodinateY);
-            double[] currentPoi = DisplayUtil.getAndroidCoordinate(poiPoint.position.getTarget().x,poiPoint.position.getTarget().y,coodinateX,coodinateY);
-            Log.d(TAG, "getPathList: x:" + currentPoi[0] + ",y:" + currentPoi[1]);
+            double[] currentPoi = DisplayUtil.getAndroidCoordinate(poiPoint.getPosition().x,poiPoint.getPosition().y,coodinateX,coodinateY);
+//            Log.d(TAG, "getPathList: x:" + currentPoi[0] + ",y:" + currentPoi[1]);
             if (lastPoi != null) {
                 Path p = new Path();
                 p.moveTo((float) lastPoi[0], (float) lastPoi[1]);
@@ -559,12 +558,12 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             }
             lastPoi = currentPoi;
             // 添加矩形区域
-            points.add(DisplayUtil.getRect(poiPoint.position.getTarget().x,poiPoint.position.getTarget().y,coodinateX,coodinateY,cleanseRes.getWidth()/2));
+            points.add(DisplayUtil.getRect(poiPoint.getPosition().x,poiPoint.getPosition().y,coodinateX,coodinateY,cleanseRes.getWidth()/2));
 
         }
     }
 
-    public List<PoiPoint> getTestPOIS(){
+    public List<POIPoint> getTestPOIS(){
         return this.testPOIS;
     }
 

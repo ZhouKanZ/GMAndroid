@@ -22,6 +22,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".ui.PathEditActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="screenSize|keyboardHidden|orientation"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         </activity>
@@ -37,6 +39,7 @@
         <activity
             android:name=".ui.RobotMasterActivity"
             android:screenOrientation="landscape"
+            android:configChanges="screenSize|keyboardHidden|orientation"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
        <!-- <activity
             android:name=".ui.PathEditActivity"

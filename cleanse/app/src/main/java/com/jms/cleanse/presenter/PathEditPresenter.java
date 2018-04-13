@@ -6,65 +6,82 @@ import com.google.gson.Gson;
 import com.jms.cleanse.JMApplication;
 import com.jms.cleanse.base.BasePresenter;
 import com.jms.cleanse.contract.PathEditContract;
-import com.jms.cleanse.entity.db.PoiPoint;
 import com.jms.cleanse.entity.db.PoiTask;
 import com.jms.cleanse.entity.file.POIJson;
+import com.jms.cleanse.entity.file.POIPoint;
+import com.jms.cleanse.entity.file.POITask;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.mapview.CustomPOI;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.objectbox.Box;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
-import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.AllMapInfo;
 
 
 /**
  * Created by WangJun on 2018/4/9.
  */
+public class PathEditPresenter extends BasePresenter<PathEditContract.View> implements PathEditContract.Presenter {
 
-public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
 
     private static final String TAG = "PathEditPresenter";
     private Box<PoiTask> poiTaskBox;
 
+
     @Override
     public void onCreate() {
-
-//        setPoiJson();
+        registerEventBus();
     }
 
     @Override
     public void onDestory() {
+        unRegisterEventBus();
+    }
 
+    private void registerEventBus() {
+        EventBus.getDefault().register(this);
     }
 
     private void unRegisterEventBus() {
-
+        EventBus.getDefault().unregister(this);
     }
 
-    public void saveTaskToDB(String name,List<PoiPoint> pointList){
+    @Override
+    public void saveTaskToDB(String name, List<POIPoint> pointList) {
 
-        PoiTask newTask = new PoiTask();
-        newTask.name = name;
-        for (PoiPoint poi : pointList) {
-            newTask.poiPoints.add(poi);
+        // 为每一个点添加名字  名字的规则 name+index
+
+        POITask newTask = new POITask();
+        newTask.setName(name);
+        for (int i = 0; i <pointList.size() ; i++) {
+            POIPoint poiPoint = pointList.get(i);
+            poiPoint.setName(name+i);
+            newTask.getPoiPoints().add(poiPoint);
         }
-        long id = poiTaskBox.put(newTask);
+//        long id = poiTaskBox.put(newTask);
+//        Log.d(TAG, "saveTaskToDB:  id:"+id);
 
+        getView().notifyAdapter(newTask);
+        updatePoiJson(newTask,FileUtil.ADD);
         // 插入成功
-        if (id > 0){
-            getView().notifyAdapter(newTask);
-        }
+//        if (id > 0) {
+//            getView().notifyAdapter(newTask);
+//            updatePoiJson(newTask, FileUtil.ADD);
+//        }
 
-        updatePoiJson(newTask, FileUtil.ADD);
     }
 
     public void deletePoiTaskDB(long id){
@@ -74,40 +91,44 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
     }
     /**
      * 更新poi.json
+     *
      * @param poiTask
      * @param tag
      */
-    private void updatePoiJson(PoiTask poiTask, int tag){
+    private void updatePoiJson(POITask poiTask, int tag) {
 
         POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
 
         List<CustomPOI> poiList = new ArrayList<>();
         List<String> group = new ArrayList<>();
 
-        for (PoiPoint poiPoint : poiTask.poiPoints) {
+        // 构建新的string bytes流
+        for (POIPoint poiPoint : poiTask.getPoiPoints()) {
 
             CustomPOI customPOI = new CustomPOI();
-            customPOI.setState(poiPoint.state);
-            customPOI.name = poiPoint.name;
+            customPOI.setState(poiPoint.isState());
+            customPOI.name = poiPoint.getName();
 
             customPOI.position = new Position();
-            customPOI.position.x = poiPoint.position.getTarget().x;
-            customPOI.position.y = poiPoint.position.getTarget().y;
-            customPOI.position.yaw = poiPoint.position.getTarget().yaw;
+            customPOI.position.x = poiPoint.getPosition().x;
+            customPOI.position.y = poiPoint.getPosition().y;
+            customPOI.position.yaw = poiPoint.getPosition().yaw;
             poiList.add(customPOI);
-            group.add(poiPoint.name);
+            group.add(poiPoint.getName());
         }
 
         switch (tag) {
             case FileUtil.ADD:
                 poiJson.getPoi_info().addAll(poiList);
-                poiJson.getGroups().put(poiTask.name, group);
+                poiJson.getGroups().put(poiTask.getName(), group);
+                poiJson.getTasks().add(poiTask);
                 break;
             case FileUtil.DELETE:
                 for (CustomPOI customPOI : poiList) {
                     poiJson.getPoi_info().remove(customPOI);
                 }
-                poiJson.getGroups().remove(poiTask.name);
+                poiJson.getGroups().remove(poiTask.getName());
+                poiJson.getTasks().remove(poiTask);
                 break;
             case FileUtil.UPDATE:
                 break;
@@ -115,26 +136,15 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
                 break;
         }
 
+
         Gson gson = new Gson();
+//        APPSend.sendFile(gson.toJson(poiJson).getBytes(), FileUtil.POI_JSON);
         Observable.just(gson.toJson(poiJson))
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(Schedulers.io())
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String content) throws Exception {
-                        APPSend.sendFile(content.getBytes(), FileUtil.POI_JSON);
-                    }
-                });
+                .subscribe(content -> APPSend.sendFile(content.getBytes(), FileUtil.POI_JSON));
 
         Log.i(TAG, "updatePoiJson: json = " + gson.toJson(poiJson));
-    }
-
-    /**
-     * 把数据写入数据库中
-     * 注意：要记得同步更新poi.json文件
-     */
-    public void createTask() {
-
     }
 
     /**
@@ -143,14 +153,15 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
      * @param taskName group名字
      */
     public void executeTask(String taskName) {
-        Observable.just(taskName)
-                .observeOn(Schedulers.io())
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String s) throws Exception {
-                        APPSend.sendOrder_roaming(LoginEntity.robotMac, taskName, 1, "false");
-                    }
-                });
+
+//        Observable.just(taskName)
+//                .observeOn(Schedulers.io())
+//                .subscribe(new Consumer<String>() {
+//                    @Override
+//                    public void accept(String s) throws Exception {
+//                        APPSend.sendOrder_roaming(LoginEntity.robotMac, taskName, 1, "false");
+//                    }
+//                });
     }
 
     /**
@@ -158,14 +169,19 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
      *
      * @return 任务数据集合
      */
-    public List<PoiTask> loadData() {
+    public List<POITask> loadData() {
 
-        poiTaskBox = JMApplication.getBoxStore().boxFor(PoiTask.class);
-        if (poiTaskBox == null) {
-            Log.i(TAG, "loadData: null");
-            return null;
-        }
-        List<PoiTask> poiTasks = poiTaskBox.query().build().find();
+        POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
+        Map<String, List<String>> groups = poiJson.getGroups();
+        List<CustomPOI> poi_info = poiJson.getPoi_info();
+        List<POITask> poiTasks = poiJson.getTasks();
+
+//        poiTaskBox = JMApplication.getBoxStore().boxFor(PoiTask.class);
+//        if (poiTaskBox == null) {
+//            Log.i(TAG, "loadData: null");
+//            return null;
+//        }
+//        List<PoiTask> poiTasks = poiTaskBox.query().build().find();
         return poiTasks;
     }
 
@@ -173,19 +189,23 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
     /**
      * 测试数据
      *
-     * @param poiTasks poi任务数据
+     * @param
      */
-    private void setPoiJson(List<PoiTask> poiTasks) {
+    public void setPoiJson() {
         final POIJson poiJson = new POIJson();
         poiJson.setVersion("1.0.0");
         poiJson.setEncoding("utf-8");
         poiJson.setPoi_info(getPOIData());
-        poiJson.setGroups(new HashMap<>());
-        poiJson.getGroups().put("test", getGroups());
+        Map<String,List<String>> groups= new HashMap<>();
+        poiJson.setGroups(groups);
+        poiJson.getGroups().put("test", getgroup());
 
+        List<POITask> tasks = new ArrayList<>();
+        POITask poiTask = new POITask();
+        poiJson.setTasks(tasks);
 
         Gson gson = new Gson();
-        String poiJsonStr = gson.toJson(poiJson);
+        final String poiJsonStr = gson.toJson(poiJson);
         Log.i(TAG, "btnClick: " + poiJson);
 
         new Thread(new Runnable() {
@@ -241,14 +261,36 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View>{
         return poiList;
     }
 
-    private List<String> getGroups() {
-
-        List<String> poiNames = new ArrayList<>();
-        poiNames.add("p1");
-        poiNames.add("p0");
-        poiNames.add("p2");
-        poiNames.add("p3");
-        return poiNames;
+    private List<String> getgroup(){
+        List<String> names = new ArrayList<>();
+        names.add("p2");
+        names.add("p1");
+        names.add("p3");
+        return names;
     }
+
+    /**
+     *  从数据库中一处数据
+     * @param task
+     */
+    @Override
+    public void removeData(PoiTask task){
+//        poiTaskBox.remove(task);
+
+        // 通知adapter发生变化
+        // getView().notifyAdapter();
+    }
+
+    /**
+     * 短按屏幕获取屏幕坐标.
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getAllMapInfo(AllMapInfo allMapInfo) {
+        if (allMapInfo != null){
+            Log.d(TAG, "getAllMapInfo: " + allMapInfo.getCurrent_map_info().getUuid());
+        }
+    }
+
+
 }
 

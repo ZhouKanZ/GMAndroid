@@ -5,14 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 
-import com.jms.cleanse.entity.db.PoiPoint;
+import com.jms.cleanse.entity.file.POIPoint;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.mapview.TestPOI;
 
@@ -62,7 +61,7 @@ public class UItestActivity extends AppCompatActivity {
         mapView.setOnClickListener(new JMMapView.OnClickListener() {
 
             @Override
-            public void onPointClick(PoiPoint poi, int pos) {
+            public void onPointClick(POIPoint poi, int pos) {
 
             }
 

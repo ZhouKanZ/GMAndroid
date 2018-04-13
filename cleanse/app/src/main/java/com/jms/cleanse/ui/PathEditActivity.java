@@ -1,6 +1,7 @@
 package com.jms.cleanse.ui;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,8 +22,9 @@ import android.widget.Toast;
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.contract.PathEditContract;
-import com.jms.cleanse.entity.db.PoiPoint;
 import com.jms.cleanse.entity.db.PoiTask;
+import com.jms.cleanse.entity.file.POIPoint;
+import com.jms.cleanse.entity.file.POITask;
 import com.jms.cleanse.presenter.PathEditPresenter;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.JMMapView;
@@ -35,6 +37,8 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import robot.boocax.com.sdkmodule.APPSend;
+import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 
 /**
  * @desc : 任务编辑
@@ -42,8 +46,10 @@ import butterknife.OnClick;
 public class PathEditActivity extends BaseActivity<PathEditPresenter> implements PathEditContract.View {
 
 
-    CommonAdapter<PoiTask> adapter;
-    List<PoiTask> taskEntities;
+    public static String KEY_TASK_NAME = "key_task_name";
+
+    CommonAdapter<POITask> adapter;
+    List<POITask> taskEntities;
     @BindView(R.id.iv_exit)
     ImageView ivExit;
     @BindView(R.id.btn_start_task)
@@ -89,6 +95,8 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
 
 
     private String taskName;
+    private PoiTask currentTask = null;
+    private long taskId = -1;
 
     @Override
     protected PathEditPresenter loadPresenter() {
@@ -105,26 +113,34 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
 
         taskEntities = new ArrayList<>();
 //        mPresenter.objectBoxTest();
+//        mPresenter.setPoiJson();
         taskEntities = mPresenter.loadData();
-        adapter = new CommonAdapter<PoiTask>(this, R.layout.item_task_info, taskEntities) {
+        adapter = new CommonAdapter<POITask>(this, R.layout.item_task_info, taskEntities) {
             @Override
-            protected void convert(ViewHolder holder, PoiTask poiTask, int position) {
-                holder.setText(R.id.tv_task_name, poiTask.name);
+            protected void convert(ViewHolder holder, POITask poiTask, int position) {
+                holder.setText(R.id.tv_task_name, poiTask.getName());
             }
         };
 
-        isCleanse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        isCleanse.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
 
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                cleanseable = isChecked;
-            }
-        });
 
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        cleanseable = isChecked;
+                    }
+                }
+        );
+
+        // todo dialog 的大小异常
         namedDialog = new Dialog(this);
         view = LayoutInflater.from(this).inflate(R.layout.dialog_task_name, null);
         namedDialog.setContentView(view);
+
         hideRightLayout();
+        ivTaskDelete.setEnabled(false);
+
 
     }
 
@@ -142,28 +158,9 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         btnCancel.setOnClickListener(v -> dismissNamedDialog());
         setAdapterItemListener();
 
-    }
-
-    private void setAdapterItemListener(){
-
-        /**
-         * 任务列表点击监听
-         */
-        adapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
-
-                PoiTask poiTask = taskEntities.get(position);
-                taskName = poiTask.name;
-            }
-
-            @Override
-            public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
-                return false;
-            }
-        });
 
     }
+
 
     /**
      * 为任务命名
@@ -189,8 +186,50 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             showLeftLayout();
             hideRightLayout();
             showBtntask();
+
         }
     }
+
+    private void setAdapterItemListener() {
+
+        /**
+         * 任务列表点击监听
+         */
+        adapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
+                POITask poiTask = taskEntities.get(position);
+                taskName = poiTask.getName();
+                showBtntask();
+                showTaskPath(poiTask);
+                enableDelete();
+            }
+
+            @Override
+            public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
+                return false;
+            }
+        });
+
+    }
+
+    /**
+     *  使能删除按钮
+     */
+    private void enableDelete() {
+        ivTaskDelete.setEnabled(true);
+    }
+
+    /**
+     *  显示任务的路径
+     */
+    private void showTaskPath(POITask poiTask) {
+
+        List<POIPoint> poiPoints = poiTask.getPoiPoints();
+        mapView.setTestPOIS(poiPoints);
+
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -201,7 +240,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
      */
     private void createTask(String name) {
         // 需要得到所有任务点的数据
-        List<PoiPoint> newPoints = new ArrayList<>();
+        List<POIPoint> newPoints = new ArrayList<>();
         newPoints.clear();
         newPoints.addAll(mapView.getTestPOIS());
         mPresenter.saveTaskToDB(name,newPoints);
@@ -212,7 +251,8 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         btnStartTask.setVisibility(View.VISIBLE);
     }
 
-    @OnClick({R.id.iv_exit, R.id.btn_start_task, R.id.iv_task_delete, R.id.iv_task_add, R.id.btn_add, R.id.btn_end})
+
+    @OnClick({R.id.iv_exit, R.id.btn_start_task, R.id.iv_task_delete, R.id.iv_task_add,R.id.btn_add,R.id.btn_end})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.iv_exit:
@@ -226,25 +266,46 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 }
                 break;
             case R.id.btn_start_task:
-                mPresenter.executeTask(taskName);
+                // 执行任务
+//                mPresenter.executeTask(taskName);
+                backUpToMaster(taskName);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        APPSend.sendOrder_roaming(LoginEntity.robotMac,"test",1,"false");
+                    }
+                }).start();
                 break;
             case R.id.iv_task_delete: // 删除任务
+                // 确定选择的任务
+                mPresenter.removeData(null);
                 break;
             case R.id.iv_task_add:    // 添加任务
                 current_mode = MODE_EDIT;
                 hideLeftLayout();
                 showRightLayout();
+                hideBtnTask();
                 addTask();
                 break;
             case R.id.btn_add:
                 addPoint();
                 break;
             case R.id.btn_end:
-//                taskComplete();
                 showNamedDialog();
                 break;
 
         }
+    }
+
+    /**
+     *  返回操作页面
+     * @param taskName
+     */
+    private void backUpToMaster(String taskName) {
+        Intent intent = new Intent();
+        intent.putExtra(PathEditActivity.KEY_TASK_NAME,taskName);
+        setResult(RESULT_OK,intent);
+        this.finish();
     }
 
     @Override
@@ -282,9 +343,14 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     }
 
     @Override
-    public void notifyAdapter(PoiTask newTask) {
+    public void notifyAdapter(POITask newTask) {
         taskEntities.add(newTask);
         adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void hideBtnTask() {
+        btnStartTask.setVisibility(View.GONE);
     }
 
     @Override
@@ -296,6 +362,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     public void showLeftLayout() {
         taskListLayout.setVisibility(View.VISIBLE);
     }
+
 
     @Override
     public boolean isCleansePoint() {

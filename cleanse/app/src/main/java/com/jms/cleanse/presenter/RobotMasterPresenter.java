@@ -162,4 +162,13 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         }
 
     }
+    @Override
+    public void cancelGoal() {
+        // 发送取消导航的命令
+        Observable.just(LoginEntity.robotMac)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())
+                .subscribe(APPSend::sendCancel_goal);
+    }
+
 }

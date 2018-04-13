@@ -10,17 +10,17 @@ import java.util.Map;
 import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Charge_points_Entity;
 
 /**
- * Created by WangJun on 2018/4/10.
+ * Created by WangJun on 2018/4/13.
  */
 
-public class POIJson {
+public class POIJsonTest {
 
     private String version;
     private String encoding;
-    private List<CustomPOI> poi_info = new ArrayList<>();
+    private List<CustomPOI> poi_info;
     private List<Charge_points_Entity> charge_points_info = new ArrayList<>();
-    private Map<String, List<String>> groups = new HashMap<>();
-    private List<POITask> tasks = new ArrayList<>();
+    private Map<String, List<String>> groups = new HashMap();
+    private Map<String, List<CustomPOI>> task_list;
 
     public String getVersion() {
         return version;
@@ -62,11 +62,11 @@ public class POIJson {
         this.groups = groups;
     }
 
-    public List<POITask> getTasks() {
-        return tasks;
+    public Map<String, List<CustomPOI>> getTask_list() {
+        return task_list;
     }
 
-    public void setTasks(List<POITask> tasks) {
-        this.tasks = tasks;
+    public void setTask_list(Map<String, List<CustomPOI>> task_list) {
+        this.task_list = task_list;
     }
 }

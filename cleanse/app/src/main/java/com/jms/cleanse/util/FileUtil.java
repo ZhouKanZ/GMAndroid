@@ -1,6 +1,5 @@
 package com.jms.cleanse.util;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -80,9 +79,13 @@ public class FileUtil {
     }
 
     public static POIJson readFileJM(String fileName) {
+
+        POIJson poiJson = null;
         String content = "";
         FileInputStream fis = null;
         File file = new File(PARENT_PATH, fileName);
+
+        // 文件存在的时候 ps(第一次读取的时候，文件的内容为空)
         if (file.exists() && file.isFile()) {
             try {
                 fis = new FileInputStream(file);
@@ -101,11 +104,16 @@ public class FileUtil {
                     e.printStackTrace();
                 }
             }
+
+            Gson gson = new Gson();
+            poiJson = gson.fromJson(content, POIJson.class);
+
+        }else {
+            poiJson = new POIJson();
+            poiJson.setVersion("1.0.0");
+            poiJson.setEncoding("utf-8");
         }
 
-        Log.i("readFile", "content = " + content);
-        Gson gson = new Gson();
-        POIJson poiJson = gson.fromJson(content, POIJson.class);
         return poiJson;
     }
 
