@@ -108,6 +108,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     @Override
     protected void initData() {
 
+
         taskEntities = new ArrayList<>();
 //        mPresenter.objectBoxTest();
         taskEntities = mPresenter.loadData();
