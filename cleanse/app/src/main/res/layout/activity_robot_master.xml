@@ -97,6 +97,19 @@
         android:layout_marginBottom="19dp"
         />
 
+    <!--急停按钮  -->
+    <ImageView
+        android:id="@+id/iv_urgent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/iv_urgent_selector"
+        android:layout_marginLeft="22dp"
+        android:layout_marginBottom="22dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone"
+        />
+
 
 
 </RelativeLayout>

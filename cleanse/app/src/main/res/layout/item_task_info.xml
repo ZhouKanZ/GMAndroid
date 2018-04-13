@@ -21,7 +21,7 @@
         android:drawableStart="@drawable/task_title_left_indicator"
         android:drawableLeft="@drawable/task_title_left_indicator" />
 
-    <!-- 任务是否在执行 -->
+   <!--  任务是否在执行
     <TextView
         android:id="@+id/tv_task_is_executing"
         android:layout_width="wrap_content"
@@ -31,7 +31,7 @@
         android:layout_marginTop="2dp"
         android:text="正在执行"
         android:textColor="@color/colorTextSelected"
-        android:textSize="@dimen/text_size_9sp" />
+        android:textSize="@dimen/text_size_9sp" />-->
 
     <View
         android:id="@+id/first_line"

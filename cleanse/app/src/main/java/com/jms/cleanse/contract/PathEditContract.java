@@ -42,12 +42,21 @@ public class PathEditContract {
         void hideRightLayout();
 
         void notifyAdapter(PoiTask newTask);
+
+        // 显示开始任务的按钮
+        void showBtntask();
+        // 隐藏开始任务的按钮
+        void hideBtnTask();
+
     }
 
     public interface Presenter{
 
         // 添加到数据库中
         void saveTaskToDB(String name,List<PoiPoint> pointList);
+
+        // 删除任务
+        void removeData(PoiTask task);
 
     }
 

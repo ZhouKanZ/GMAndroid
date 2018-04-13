@@ -6,6 +6,7 @@ import com.jms.cleanse.contract.RobotMasterContract;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
@@ -52,6 +53,15 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     @Override
     public void requestAllMapInfo() {
         new Thread(APPSend::sendGetAllMap).start();
+    }
+
+    @Override
+    public void cancelGoal() {
+        // 发送取消导航的命令
+        Observable.just(LoginEntity.robotMac)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())
+                .subscribe(APPSend::sendCancel_goal);
     }
 
 }

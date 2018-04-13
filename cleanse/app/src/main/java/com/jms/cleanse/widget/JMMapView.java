@@ -406,6 +406,8 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         if (testPOIS != null && testPOIS.size() > 0) {
             this.testPOIS.clear();
             this.testPOIS.addAll(testPOIS);
+        }else {
+            this.testPOIS.clear();
         }
     }
 

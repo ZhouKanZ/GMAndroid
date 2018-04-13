@@ -35,6 +35,11 @@ public class RobotMasterContract {
          *  请求所有地图
          */
         void requestAllMapInfo();
+
+        /**
+         *  取消导航
+         */
+        void cancelGoal();
     }
 
 }

@@ -12,6 +12,10 @@ import com.jms.cleanse.entity.file.POIJson;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.mapview.CustomPOI;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,66 +23,77 @@ import java.util.List;
 import io.objectbox.Box;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
-import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.AllMapInfo;
 
 
 /**
  * Created by WangJun on 2018/4/9.
  */
 
-public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
+public class PathEditPresenter extends BasePresenter<PathEditContract.View> implements PathEditContract.Presenter {
 
     private static final String TAG = "PathEditPresenter";
     private Box<PoiTask> poiTaskBox;
 
+
     @Override
     public void onCreate() {
-
-//        setPoiJson();
+        registerEventBus();
     }
 
     @Override
     public void onDestory() {
+        unRegisterEventBus();
+    }
 
+    private void registerEventBus() {
+        EventBus.getDefault().register(this);
     }
 
     private void unRegisterEventBus() {
-
+        EventBus.getDefault().unregister(this);
     }
 
-    public void saveTaskToDB(String name,List<PoiPoint> pointList){
+    @Override
+    public void saveTaskToDB(String name, List<PoiPoint> pointList) {
+
+        // 为每一个点添加名字  名字的规则 name+index
 
         PoiTask newTask = new PoiTask();
         newTask.name = name;
-        for (PoiPoint poi : pointList) {
-            newTask.poiPoints.add(poi);
+        for (int i = 0; i <pointList.size() ; i++) {
+            PoiPoint poiPoint = pointList.get(i);
+            poiPoint.setName(name+i);
+            newTask.poiPoints.add(poiPoint);
         }
         long id = poiTaskBox.put(newTask);
+        Log.d(TAG, "saveTaskToDB:  id:"+id);
 
         // 插入成功
-        if (id > 0){
+        if (id > 0) {
             getView().notifyAdapter(newTask);
+            updatePoiJson(newTask, FileUtil.ADD);
         }
 
-        updatePoiJson(newTask, FileUtil.ADD);
     }
 
     /**
      * 更新poi.json
+     *
      * @param poiTask
      * @param tag
      */
-    private void updatePoiJson(PoiTask poiTask, int tag){
+    private void updatePoiJson(PoiTask poiTask, int tag) {
 
         POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
 
         List<CustomPOI> poiList = new ArrayList<>();
         List<String> group = new ArrayList<>();
 
+        // 构建新的string bytes流
         for (PoiPoint poiPoint : poiTask.poiPoints) {
 
             CustomPOI customPOI = new CustomPOI();
@@ -110,26 +125,15 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
                 break;
         }
 
+
         Gson gson = new Gson();
+//        APPSend.sendFile(gson.toJson(poiJson).getBytes(), FileUtil.POI_JSON);
         Observable.just(gson.toJson(poiJson))
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(Schedulers.io())
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String content) throws Exception {
-                        APPSend.sendFile(content.getBytes(), FileUtil.POI_JSON);
-                    }
-                });
+                .subscribe(content -> APPSend.sendFile(content.getBytes(), FileUtil.POI_JSON));
 
         Log.i(TAG, "updatePoiJson: json = " + gson.toJson(poiJson));
-    }
-
-    /**
-     * 把数据写入数据库中
-     * 注意：要记得同步更新poi.json文件
-     */
-    public void createTask() {
-
     }
 
     /**
@@ -138,14 +142,15 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
      * @param taskName group名字
      */
     public void executeTask(String taskName) {
-        Observable.just(taskName)
-                .observeOn(Schedulers.io())
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String s) throws Exception {
-                        APPSend.sendOrder_roaming(LoginEntity.robotMac, taskName, 1, "false");
-                    }
-                });
+
+//        Observable.just(taskName)
+//                .observeOn(Schedulers.io())
+//                .subscribe(new Consumer<String>() {
+//                    @Override
+//                    public void accept(String s) throws Exception {
+//                        APPSend.sendOrder_roaming(LoginEntity.robotMac, taskName, 1, "false");
+//                    }
+//                });
     }
 
     /**
@@ -245,5 +250,29 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> {
         poiNames.add("p3");
         return poiNames;
     }
+
+    /**
+     *  从数据库中一处数据
+     * @param task
+     */
+    @Override
+    public void removeData(PoiTask task){
+        poiTaskBox.remove(task);
+
+        // 通知adapter发生变化
+        // getView().notifyAdapter();
+    }
+
+    /**
+     * 短按屏幕获取屏幕坐标.
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getAllMapInfo(AllMapInfo allMapInfo) {
+        if (allMapInfo != null){
+            Log.d(TAG, "getAllMapInfo: " + allMapInfo.getCurrent_map_info().getUuid());
+        }
+    }
+
+
 }
 
