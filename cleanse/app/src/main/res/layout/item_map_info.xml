@@ -12,10 +12,11 @@
 
     <ImageView
         android:id="@+id/iv_map_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/map_icon_background_selector"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         />
+
+    <!--android:src="@drawable/map_icon_background_selector"-->
 
     <TextView
         android:id="@+id/tv_map_name"

@@ -7,11 +7,15 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.PopupWindow;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.jms.cleanse.R;
-import com.jms.cleanse.entity.uiTest.MapInfo;
+import com.jms.cleanse.entity.map.MapTabSpec;
 import com.zhy.adapter.recyclerview.CommonAdapter;
+import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
 
 import java.util.ArrayList;
@@ -28,10 +32,11 @@ public class MapSelectPopupWindow extends PopupWindow {
     LayoutInflater inflater;
 //    @BindView(R.id.map_rv)
     RecyclerView mapRv;
-    CommonAdapter<String> adapter;
+    CommonAdapter<MapTabSpec> adapter;
     Context context;
-    List<String> mapInfos;
-    View.OnClickListener onClickListener;
+    List<MapTabSpec> mapInfos;
+    OnClickListener onClickListener;
+    private MultiItemTypeAdapter.OnItemClickListener itemClickListener;
 
     public MapSelectPopupWindow(Context context) {
         super(context);
@@ -42,8 +47,16 @@ public class MapSelectPopupWindow extends PopupWindow {
 
     }
 
-    public void setOnClickListener(View.OnClickListener onClickListener) {
+    public interface OnClickListener{
+        void onClick(int position);
+    }
+
+    public void setOnClickListener(OnClickListener onClickListener) {
         this.onClickListener = onClickListener;
+    }
+
+    public void setOnItemClickListener(MultiItemTypeAdapter.OnItemClickListener onItemClickListener){
+        this.itemClickListener = onItemClickListener;
     }
 
     private void initData() {
@@ -59,16 +72,34 @@ public class MapSelectPopupWindow extends PopupWindow {
     private void setContentView() {
 
         View view = inflater.inflate(R.layout.map_select_popup, null);
-        adapter = new CommonAdapter<String>(context, R.layout.item_map_info, mapInfos) {
+        adapter = new CommonAdapter<MapTabSpec>(context, R.layout.item_map_info, mapInfos) {
             @Override
-            protected void convert(ViewHolder holder, String s, int position) {
-                holder.setText(R.id.tv_map_name, s);
-                if (onClickListener != null) {
-                    holder.setOnClickListener(R.id.item_map_layout, onClickListener);
-                }
+            protected void convert(ViewHolder holder, MapTabSpec s, int position) {
+                holder.setText(R.id.tv_map_name, s.getMapName());
+
+
+                    holder.setOnClickListener(R.id.item_map_layout, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (onClickListener != null) {
+                                onClickListener.onClick(position);
+                            }
+                        }
+                    });
+
+
+                RequestOptions requestOptions = new RequestOptions();
+                requestOptions.placeholder(R.mipmap.ic_launcher);
+                requestOptions.error(R.drawable.map_unselected);
+
+                Glide.with(context)
+                        .setDefaultRequestOptions(requestOptions)
+                        .load(s.getMap())
+                        .into((ImageView) holder.getView(R.id.iv_map_icon));
+//                }
             }
         };
-
+//        adapter.setOnItemClickListener(itemClickListener);
         mapRv = view.findViewById(R.id.map_rv);
         mapRv.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         mapRv.setAdapter(adapter);
@@ -84,11 +115,17 @@ public class MapSelectPopupWindow extends PopupWindow {
     /**
      *  更新adapter
      */
-    public void notifyAdapter(List<String> mapInfos){
-        this.mapInfos.clear();
-        this.mapInfos.addAll(mapInfos);
-        adapter.notifyDataSetChanged();
+        public void notifyAdapter(List<MapTabSpec> mapInfos){
+            if (mapInfos == null){
+                return;
+            }
+            this.mapInfos.clear();
+            this.mapInfos.addAll(mapInfos);
+            adapter.notifyDataSetChanged();
     }
 
+    public void notifyItemChange(int position){
+        adapter.notifyItemChanged(position);
+    }
 
 }

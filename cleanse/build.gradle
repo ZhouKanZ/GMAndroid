@@ -3,8 +3,9 @@
 buildscript {
     ext.objectboxVersion = '1.4.4'
     repositories {
-        google()
         jcenter()
+        mavenCentral()
+        google()
 
     }
     dependencies {

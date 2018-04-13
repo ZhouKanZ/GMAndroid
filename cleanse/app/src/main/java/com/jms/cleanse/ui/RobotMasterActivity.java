@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -13,14 +14,17 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
+import com.google.gson.Gson;
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.config.RobotConfig;
 import com.jms.cleanse.contract.RobotMasterContract;
+import com.jms.cleanse.entity.map.MapTabSpec;
 import com.jms.cleanse.entity.robot.LaserEntity;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
 import com.jms.cleanse.util.DisplayUtil;
 import com.jms.cleanse.util.FileUtil;
+import com.jms.cleanse.widget.BatteryBar;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.MapSelectPopupWindow;
 import com.jms.cleanse.widget.RockerView;
@@ -30,17 +34,27 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.LongPressPositionEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ShortPressScreenPosition;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.TempMapBytes;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
 public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
@@ -52,22 +66,35 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     @BindView(R.id.ib_task_list)
     ImageView ibTaskList;
+
     @BindView(R.id.ib_map_list)
     ImageView ibMapList;
+
     @BindView(R.id.ib_server_list)
     ImageView ibServerList;
     MapSelectPopupWindow popupWindow;
+
     @BindView(R.id.layout_robot_master)
     RelativeLayout layoutRobotMaster;
+
     @BindView(R.id.layout_right_sider)
     LinearLayout layoutRightSider;
+
     @BindView(R.id.map_view)
     JMMapView mapView;
+
     @BindView(R.id.rockerview)
     RockerView rockerview;
+
+    @BindView(R.id.battery_bar)
+    BatteryBar batteryBar;
     List<TestPOI> testPOIS;
 
     double[] speed = new double[3];
+    private All_map_info allMapInfo;
+    private List<MapTabSpec> mapTabSpecs;
+    int index = -1; // bitmap的位置
+    private List<Bitmap> thumbnailMaps;
 
     @Override
     protected RobotMasterPresenter loadPresenter() {
@@ -84,7 +111,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
         popupWindow = new MapSelectPopupWindow(this);
         EventBus.getDefault().register(this);
-
+        thumbnailMaps = new ArrayList<>();
         layoutRobotMaster.post(new Runnable() {
             @Override
             public void run() {
@@ -94,6 +121,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             }
         });
 
+        mapTabSpecs = new ArrayList<>();
     }
 
     @Override
@@ -106,13 +134,51 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                     layoutRightSider.setVisibility(View.VISIBLE);
                 }
             });
-            popupWindow.setOnClickListener(new View.OnClickListener() {
+            popupWindow.setOnClickListener(new MapSelectPopupWindow.OnClickListener() {
                 @Override
-                public void onClick(View v) {
+                public void onClick(int position) {
+                    Observable.just(allMapInfo.getAll_map_info().get(position))
+                            .subscribeOn(AndroidSchedulers.mainThread())
+                            .observeOn(Schedulers.io())
+                            .subscribe(new Consumer<String>() {
+                                @Override
+                                public void accept(String mapName) throws Exception {
+
+                                    APPSend.sendApply_map(mapName);
+
+                                }
+                            }, new Consumer<Throwable>() {
+                                @Override
+                                public void accept(Throwable throwable) throws Exception {
+                                    
+                                }
+                            });
                     popupWindow.dismiss();
                 }
             });
         }
+//        popupWindow.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
+//
+//                Log.i(TAG, "onItemClick: " + allMapInfo.getAll_map_info().get(position));
+//                Observable.just(allMapInfo.getAll_map_info().get(position))
+//                        .subscribeOn(AndroidSchedulers.mainThread())
+//                        .observeOn(Schedulers.io())
+//                        .subscribe(new Consumer<String>() {
+//                            @Override
+//                            public void accept(String mapName) throws Exception {
+//                                APPSend.sendApply_map(mapName);
+//                            }
+//                        });
+//                loadMap();
+//            }
+//
+//            @Override
+//            public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
+//                return false;
+//            }
+//        });
         rockerview.setOnAngleChangeListener(this);
     }
 
@@ -132,6 +198,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 break;
             case R.id.ib_map_list:
                 // 唤起popwindow
+                mapTabSpecs.clear();
                 mPresenter.requestAllMapInfo();
                 popupWindow.showAtLocation(layoutRobotMaster, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
                 // 隐藏sliderLayout
@@ -248,6 +315,10 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     protected void onResume() {
         super.onResume();
+        loadMap();
+    }
+
+    private void loadMap() {
         byte[] mapBytes = FileUtil.readPng("map.png");
         if (mapBytes != null) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
@@ -267,10 +338,108 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     // 所有地图的信息
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllMapInfo(All_map_info allMapInfo) {
+
+        Gson gson = new Gson();
+        Log.i(TAG, "getAllMapInfo: " + gson.toJson(allMapInfo));
         if (allMapInfo != null) {
-            // 得到所有的地图信息
-            popupWindow.notifyAdapter(allMapInfo.getAll_map_info());
+            this.allMapInfo = allMapInfo;
+            // 需要判断是否相同并只加入不同的地图到其中
+            compareOriginMapSpec(this.allMapInfo.getAll_map_info());
         }
+    }
+
+    /**
+     * 判断是否有相同的内容，如果存在不同的就添加到集合中
+     *
+     * @param all_map_info
+     */
+    private void compareOriginMapSpec(List<String> all_map_info) {
+        // 相同
+        boolean isSame = false;
+
+        int originSize = mapTabSpecs.size();
+
+        for (int i = 0; i < all_map_info.size(); i++) {
+            isSame = false;
+            String s = all_map_info.get(i);
+            for (int j = 0; j < mapTabSpecs.size(); j++) {
+                String name = mapTabSpecs.get(j).getMapName();
+                // 相等
+                if (name == s) {
+                    isSame = true;
+                    break;
+                }
+            }
+
+            // 如果不相同添加到list中
+            if (!isSame || mapTabSpecs.isEmpty()) {
+                MapTabSpec mapTabSpec = new MapTabSpec();
+                mapTabSpec.setMapName(s);
+                mapTabSpecs.add(mapTabSpec);
+                // 并且请求对应地图的缩略图
+                notifyAskNewBitmap(s);
+            }
+        }
+
+        int nowSize = mapTabSpecs.size();
+        //
+        if (nowSize > originSize) {
+            popupWindow.notifyAdapter(mapTabSpecs);
+        }
+
+    }
+
+    /**
+     * 请求新的缩略图
+     *
+     * @param s
+     */
+    private void notifyAskNewBitmap(String s) {
+        Observable.just(s)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())
+                .subscribe(mapStr -> APPSend.sendGetThumbnailMap(mapStr));
+    }
+
+    // 得到缩略图
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getAllThumbnailMap(ThumbnailCache thumbnailCache) {
+
+        byte[] decode = Base64.decode(thumbnailCache.getThumbnail().getContent(), Base64.DEFAULT);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(decode, 0, decode.length);
+        index++;
+        MapTabSpec mapTabSpec = mapTabSpecs.get(index);
+        mapTabSpec.setMap(bitmap);
+        popupWindow.notifyItemChange(index);
+
+//        thumbnailMaps.add(bitmap);
+//        Log.i(TAG, "getAllThumbnailMap: " + thumbnailMaps.size() + "," + allMapInfo.getAll_map_info().size());
+//        if (thumbnailMaps.size() == allMapInfo.getAll_map_info().size()) {
+//            popupWindow.notifyAdapter(null);
+//            thumbnailMaps.clear();
+//        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void getOBD(OBD obd) {
+
+        Gson gson = new Gson();
+        String s = gson.toJson(obd);
+        String[] obds = obd.getObd().split(" ");
+        Observable.interval(0, 1, TimeUnit.MINUTES)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Long>() {
+                    @Override
+                    public void accept(Long aLong) throws Exception {
+                        batteryBar.updateCharge(Float.valueOf(obds[5]));
+                        Log.i(TAG, "getOBD: " + s);
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Log.i(TAG, "update charge error " + throwable.getMessage());
+                    }
+                });
     }
 
     @Override
@@ -280,5 +449,30 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private static double convertAngleToRadians(double angle) {
         return angle * (2 * (Math.PI / 360));
+    }
+
+    /**
+     * map图片byte[]
+     */
+    @Subscribe(threadMode = ThreadMode.POSTING, sticky = true)
+    public void getMapBytes(final TempMapBytes tempMapBytes) {
+        Log.i(TAG, "getMapBytes: ");
+        if (tempMapBytes != null) {
+            byte[] bytes = tempMapBytes.getBytes();
+            Observable.just(BitmapFactory.decodeByteArray(bytes, 0, bytes.length))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<Bitmap>() {
+                        @Override
+                        public void accept(Bitmap bitmap) throws Exception {
+                            mapView.setMap(bitmap);
+                        }
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable throwable) throws Exception {
+                            Log.i(TAG, "apply map error " + throwable.getMessage());
+                        }
+                    });
+        }
     }
 }
