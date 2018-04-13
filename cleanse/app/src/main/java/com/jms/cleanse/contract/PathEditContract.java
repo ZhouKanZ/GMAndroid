@@ -42,6 +42,8 @@ public class PathEditContract {
         void hideRightLayout();
 
         void notifyAdapter(PoiTask newTask);
+
+        void showBtntask();
     }
 
     public interface Presenter{

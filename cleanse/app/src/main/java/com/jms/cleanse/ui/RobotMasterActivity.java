@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -23,7 +22,6 @@ import com.jms.cleanse.entity.map.MapTabSpec;
 import com.jms.cleanse.entity.robot.LaserEntity;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
 import com.jms.cleanse.util.DisplayUtil;
-import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.BatteryBar;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.MapSelectPopupWindow;
@@ -44,7 +42,6 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.LongPressPositionEntity;
@@ -88,13 +85,15 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     @BindView(R.id.battery_bar)
     BatteryBar batteryBar;
+
+    @BindView(R.id.test_iv)
+    ImageView testIv;
+
     List<TestPOI> testPOIS;
 
     double[] speed = new double[3];
     private All_map_info allMapInfo;
     private List<MapTabSpec> mapTabSpecs;
-    int index = -1; // bitmap的位置
-    private List<Bitmap> thumbnailMaps;
 
     @Override
     protected RobotMasterPresenter loadPresenter() {
@@ -109,9 +108,10 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     protected void initData() {
 
+        mPresenter.initData();
+        mapTabSpecs = new ArrayList<>();
         popupWindow = new MapSelectPopupWindow(this);
         EventBus.getDefault().register(this);
-        thumbnailMaps = new ArrayList<>();
         layoutRobotMaster.post(new Runnable() {
             @Override
             public void run() {
@@ -120,8 +120,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 float toolBarHeight = DisplayUtil.dip2px(RobotMasterActivity.this, 33);
             }
         });
-
-        mapTabSpecs = new ArrayList<>();
     }
 
     @Override
@@ -137,48 +135,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             popupWindow.setOnClickListener(new MapSelectPopupWindow.OnClickListener() {
                 @Override
                 public void onClick(int position) {
-                    Observable.just(allMapInfo.getAll_map_info().get(position))
-                            .subscribeOn(AndroidSchedulers.mainThread())
-                            .observeOn(Schedulers.io())
-                            .subscribe(new Consumer<String>() {
-                                @Override
-                                public void accept(String mapName) throws Exception {
-
-                                    APPSend.sendApply_map(mapName);
-
-                                }
-                            }, new Consumer<Throwable>() {
-                                @Override
-                                public void accept(Throwable throwable) throws Exception {
-                                    
-                                }
-                            });
+                    mPresenter.popupWindowOnClick(position);
                     popupWindow.dismiss();
                 }
             });
         }
-//        popupWindow.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
-//
-//                Log.i(TAG, "onItemClick: " + allMapInfo.getAll_map_info().get(position));
-//                Observable.just(allMapInfo.getAll_map_info().get(position))
-//                        .subscribeOn(AndroidSchedulers.mainThread())
-//                        .observeOn(Schedulers.io())
-//                        .subscribe(new Consumer<String>() {
-//                            @Override
-//                            public void accept(String mapName) throws Exception {
-//                                APPSend.sendApply_map(mapName);
-//                            }
-//                        });
-//                loadMap();
-//            }
-//
-//            @Override
-//            public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
-//                return false;
-//            }
-//        });
         rockerview.setOnAngleChangeListener(this);
     }
 
@@ -198,11 +159,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 break;
             case R.id.ib_map_list:
                 // 唤起popwindow
-                mapTabSpecs.clear();
-                mPresenter.requestAllMapInfo();
+                mPresenter.showMapList();
                 popupWindow.showAtLocation(layoutRobotMaster, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
                 // 隐藏sliderLayout
                 layoutRightSider.setVisibility(View.GONE);
+                popupWindow.notifyAdapter(mapTabSpecs);
                 break;
             case R.id.ib_server_list:
                 // 绘制point
@@ -263,6 +224,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             String reason = reconnReason.getReason();
 //            Log.i("buildMapTest", "偏振" + "getReconn: " + reason);
         }
+
     }
 
     @Override
@@ -319,11 +281,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
     private void loadMap() {
-        byte[] mapBytes = FileUtil.readPng("map.png");
-        if (mapBytes != null) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
-            mapView.setMap(bitmap);
-        }
+        mapView.setMap(mPresenter.loadMapPng());
     }
 
     // 充电状态
@@ -339,12 +297,20 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllMapInfo(All_map_info allMapInfo) {
 
+
         Gson gson = new Gson();
-        Log.i(TAG, "getAllMapInfo: " + gson.toJson(allMapInfo));
+        Log.i(TAG, "getAllMapInfo: " + allMapInfo.getAll_map_info().size());
+        if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
+            return;
+        }
+
         if (allMapInfo != null) {
             this.allMapInfo = allMapInfo;
             // 需要判断是否相同并只加入不同的地图到其中
-            compareOriginMapSpec(this.allMapInfo.getAll_map_info());
+//            compareOriginMapSpec(this.allMapInfo.getAll_map_info());
+            for (String mapName : allMapInfo.getAll_map_info()) {
+                mPresenter.notifyAskNewBitmap(mapName);
+            }
         }
     }
 
@@ -365,7 +331,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             for (int j = 0; j < mapTabSpecs.size(); j++) {
                 String name = mapTabSpecs.get(j).getMapName();
                 // 相等
-                if (name == s) {
+                if (name.equals(s)) {
                     isSame = true;
                     break;
                 }
@@ -377,7 +343,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 mapTabSpec.setMapName(s);
                 mapTabSpecs.add(mapTabSpec);
                 // 并且请求对应地图的缩略图
-                notifyAskNewBitmap(s);
+                Log.i(TAG, "compareOriginMapSpec: ");
+                mPresenter.notifyAskNewBitmap(s);
             }
         }
 
@@ -389,35 +356,15 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     }
 
-    /**
-     * 请求新的缩略图
-     *
-     * @param s
-     */
-    private void notifyAskNewBitmap(String s) {
-        Observable.just(s)
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(Schedulers.io())
-                .subscribe(mapStr -> APPSend.sendGetThumbnailMap(mapStr));
-    }
-
     // 得到缩略图
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllThumbnailMap(ThumbnailCache thumbnailCache) {
 
-        byte[] decode = Base64.decode(thumbnailCache.getThumbnail().getContent(), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(decode, 0, decode.length);
-        index++;
-        MapTabSpec mapTabSpec = mapTabSpecs.get(index);
-        mapTabSpec.setMap(bitmap);
-        popupWindow.notifyItemChange(index);
+        mapTabSpecs = mPresenter.getAllThumbnailMaps(thumbnailCache);
+        if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
+            popupWindow.notifyAdapter(mapTabSpecs);
+        }
 
-//        thumbnailMaps.add(bitmap);
-//        Log.i(TAG, "getAllThumbnailMap: " + thumbnailMaps.size() + "," + allMapInfo.getAll_map_info().size());
-//        if (thumbnailMaps.size() == allMapInfo.getAll_map_info().size()) {
-//            popupWindow.notifyAdapter(null);
-//            thumbnailMaps.clear();
-//        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
@@ -432,7 +379,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                     @Override
                     public void accept(Long aLong) throws Exception {
                         batteryBar.updateCharge(Float.valueOf(obds[5]));
-                        Log.i(TAG, "getOBD: " + s);
+//                        Log.i(TAG, "getOBD: " + s);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
@@ -474,5 +421,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                         }
                     });
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void getConnectState(ReconnReason reason) {
+
+        Log.i(TAG, "getConnectState: " + reason.getReason());
     }
 }

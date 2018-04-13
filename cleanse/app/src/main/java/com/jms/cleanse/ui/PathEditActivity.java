@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -14,10 +16,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.contract.PathEditContract;
+import com.jms.cleanse.entity.db.PoiPoint;
 import com.jms.cleanse.entity.db.PoiTask;
 import com.jms.cleanse.presenter.PathEditPresenter;
 import com.jms.cleanse.util.FileUtil;
@@ -115,8 +119,13 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 cleanseable = isChecked;
             }
-        }
-        );
+        });
+
+        namedDialog = new Dialog(this);
+        view = LayoutInflater.from(this).inflate(R.layout.dialog_task_name, null);
+        namedDialog.setContentView(view);
+        hideRightLayout();
+
     }
 
     @Override
@@ -124,6 +133,14 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         taskRv.setHasFixedSize(false);
         taskRv.setLayoutManager(new LinearLayoutManager(this));
         taskRv.setAdapter(adapter);
+
+        etNamedTask = view.findViewById(R.id.et_task_named);
+        btnSure = view.findViewById(R.id.btn_sure);
+        btnCancel = view.findViewById(R.id.btn_cancel);
+
+        btnSure.setOnClickListener(v -> namedTask());
+        btnCancel.setOnClickListener(v -> dismissNamedDialog());
+        setAdapterItemListener();
 
     }
 
@@ -148,14 +165,54 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
 
     }
 
+    /**
+     * 为任务命名
+     */
+    private void namedTask() {
+
+        String name = etNamedTask.getEditableText().toString().trim();
+
+        // 任务没有添加点
+        if (mapView.getTestPOIS().size() == 0){
+            Toast.makeText(this, "不要忘记给任务添加消毒路径!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(name)) {
+            Toast.makeText(this, "朋友！您忘记给它命名了", Toast.LENGTH_SHORT).show();
+        } else {
+            current_mode = MODE_LIST;
+
+            dismissNamedDialog();
+            createTask(name);
+            taskComplete();
+            showLeftLayout();
+            hideRightLayout();
+            showBtntask();
+        }
+    }
     @Override
     protected void onResume() {
         super.onResume();
         loadMap();
     }
+    /**
+     * 创建并保存任务
+     */
+    private void createTask(String name) {
+        // 需要得到所有任务点的数据
+        List<PoiPoint> newPoints = new ArrayList<>();
+        newPoints.clear();
+        newPoints.addAll(mapView.getTestPOIS());
+        mPresenter.saveTaskToDB(name,newPoints);
+    }
 
+    @Override
+    public void showBtntask() {
+        btnStartTask.setVisibility(View.VISIBLE);
+    }
 
-    @OnClick({R.id.iv_exit, R.id.btn_start_task, R.id.iv_task_delete, R.id.iv_task_add})
+    @OnClick({R.id.iv_exit, R.id.btn_start_task, R.id.iv_task_delete, R.id.iv_task_add, R.id.btn_add, R.id.btn_end})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.iv_exit:

@@ -31,7 +31,6 @@ public abstract class BaseActivity<P extends IPresenter> extends RxAppCompatActi
         //隐藏状态栏
         hideStatusBar(true);
 
-
         setContentView(getContentView());
         unbinder = ButterKnife.bind(this);
         mPresenter = loadPresenter();
