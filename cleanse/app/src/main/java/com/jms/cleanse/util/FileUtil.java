@@ -1,7 +1,5 @@
 package com.jms.cleanse.util;
 
-import android.util.Log;
-
 import com.google.gson.Gson;
 import com.jms.cleanse.JMApplication;
 import com.jms.cleanse.entity.file.POIJson;

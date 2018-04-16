@@ -2,12 +2,10 @@ package com.jms.cleanse.presenter;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import com.jms.cleanse.JMApplication;
-import com.jms.cleanse.R;
 import com.jms.cleanse.base.BasePresenter;
 import com.jms.cleanse.contract.ServerListContract;
 import com.jms.cleanse.entity.robot.ServerEntity;
@@ -43,7 +41,6 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Report_poi_statu
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Report_stat;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.System_message;
 import robot.boocax.com.sdkmodule.utils.init_files.NaviContext;
-import robot.boocax.com.sdkmodule.view.BoocaxMapView;
 
 /**
  * Created by WangJun on 2018/3/21.
@@ -70,27 +67,7 @@ public class ServerListPresenter extends BasePresenter<ServerListContract.Server
     @Override
     public void initData() {
         configuration();//配置页面
-//        configuredView();//配置地图控件
-
         TCP_CONN.reconnTime = 5000;               //重连时间(不设置默认5000ms,上层可更改,建议3000ms以上).
-    }
-
-    private void configuredView() {
-        // first question : why init here?
-        BoocaxMapView.boocaxMapViewLeft = 0;
-        BoocaxMapView.boocaxMapViewTop = 50;
-        BoocaxMapView.boocaxMapViewRight = 1920;
-        BoocaxMapView.boocaxMapViewBottom = 1080;                                   //实际BoocaxMapView的上下左右的屏幕坐标,根据页面动态获取
-        BoocaxMapView.setCenterArea(0.2f);                                          //地图居中区域的占比（占BoocaxMapView）
-
-        BoocaxMapView.setFirstShowMapMode(0);                                       //设置居中显示模式 0代表地图机器人居中显示(地图自动缩放) 1代表地图平铺展示到屏幕中
-        BoocaxMapView.setChoseRobotPic(context, R.drawable.chooserobot);                 //设置选定机器人图标
-        BoocaxMapView.setOtherRobotPic(context, R.drawable.otherrobot);                  //设置非选定机器人图标
-        BoocaxMapView.setPOIPic(context, R.drawable.ic_poi);     //设置POI点图标资源
-        BoocaxMapView.setLaserColor(80, 255, 255, 0);                               //设置激光扫过路径的颜色
-        BoocaxMapView.setLaserPointColor(Color.RED);                                //设置激光探测位置的颜色
-        BoocaxMapView.setRealPathColor(Color.GREEN);                                //设置real_path的颜色
-        BoocaxMapView.setRealPahtSize(2.5f);                                        //设置real_path上点的半径
     }
 
     //SearchServerActivity页面配置

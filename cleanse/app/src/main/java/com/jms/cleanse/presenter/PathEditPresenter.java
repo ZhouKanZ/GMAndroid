@@ -137,7 +137,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
                 break;
         }
 
-
         Gson gson = new Gson();
 //        APPSend.sendFile(gson.toJson(poiJson).getBytes(), FileUtil.POI_JSON);
         Observable.just(gson.toJson(poiJson))
@@ -160,12 +159,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
         List<CustomPOI> poi_info = poiJson.getPoi_info();
         List<POITask> poiTasks = poiJson.getTasks();
 
-//        poiTaskBox = JMApplication.getBoxStore().boxFor(PoiTask.class);
-//        if (poiTaskBox == null) {
-//            Log.i(TAG, "loadData: null");
-//            return null;
-//        }
-//        List<PoiTask> poiTasks = poiTaskBox.query().build().find();
         return poiTasks;
     }
 
