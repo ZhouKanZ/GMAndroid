@@ -2,6 +2,7 @@ package com.jms.cleanse.presenter;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
@@ -26,9 +27,11 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.Map_param;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
 
 /**
  * Created by zhoukan on 2018/3/28.
@@ -162,6 +165,25 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         }
 
     }
+
+    /**
+     *  获取当前地图的信息
+     * @param map_param
+     */
+    @Subscribe(threadMode=ThreadMode.POSTING)
+    public void getMap_info(Map_param map_param) {
+        if(map_param!=null&&map_param.getMapParam()!=null){
+            All_file_info.MapInfoBean param=map_param.getMapParam();
+            String mapName = param.getName();
+            if (!TextUtils.isEmpty(mapName)){
+                getView().showLoadMap(mapName);
+            }
+
+        }
+    }
+
+
+
     @Override
     public void cancelGoal() {
         // 发送取消导航的命令

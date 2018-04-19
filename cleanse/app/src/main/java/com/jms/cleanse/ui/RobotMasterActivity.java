@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Gravity;
@@ -22,6 +23,7 @@ import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.config.RobotConfig;
 import com.jms.cleanse.contract.RobotMasterContract;
 import com.jms.cleanse.entity.file.POIJson;
+import com.jms.cleanse.entity.file.POIPoint;
 import com.jms.cleanse.entity.file.POITask;
 import com.jms.cleanse.entity.map.MapTabSpec;
 import com.jms.cleanse.entity.robot.LaserEntity;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -61,7 +64,6 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
-
 
 
 public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
@@ -109,6 +111,12 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     Switch switchUpperComputer;
     @BindView(R.id.iv_urgent)
     ImageView ivUrgent;
+    @BindView(R.id.tv_current_location)
+    TextView tvCurrentLocation;
+    @BindView(R.id.tv_current_task)
+    TextView tvCurrentTask;
+    @BindView(R.id.line_task_div)
+    View lineTaskDiv;
     private All_map_info allMapInfo;
     private List<MapTabSpec> mapTabSpecs;
 
@@ -437,6 +445,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         return speed;
     }
 
+    @Override
+    public void showLoadMap(String mapName) {
+
+    }
+
     private static double convertAngleToRadians(double angle) {
         return angle * (2 * (Math.PI / 360));
     }
@@ -469,8 +482,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void getConnectState(ReconnReason reason) {
-
         Log.i(TAG, "getConnectState: " + reason.getReason());
+        // 网络连接状况
     }
 
     /**
@@ -485,11 +498,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-
             String taskName = data.getStringExtra(PathEditActivity.KEY_TASK_NAME);
             Log.d(TAG, "onActivityResult: " + taskName);
             queryTask(taskName);
-
         }
 
     }
@@ -500,19 +511,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
      * @param taskName
      */
     private void queryTask(String taskName) {
-
         Log.d(TAG, "queryTask: " + taskName);
-/*        Box<PoiTask> box = JMApplication.getBoxStore().boxFor(PoiTask.class);
-        Query<PoiTask> query = box.query().equal(PoiTask_.name, taskName).build();
-        PoiTask poiTask = query.findFirst();
-
-        List<PoiPoint> points = poiTask.poiPoints;
-        showTaskPath(points, poiTask.name);*/
-
         POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
         for (POITask task : poiJson.getTasks()) {
-            if (taskName.equals(task.getName())){
-                showTaskPath(task.getPoiPoints(),taskName);
+            if (taskName.equals(task.getName())) {
+                showTaskPath(task.getPoiPoints(), taskName);
                 return;
             }
         }
@@ -536,27 +539,21 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
     /**
-     *
      * @param mode 0 1 分别表示 手动模式和自动模式
      */
     private void switchMode(int mode) {
-        if (mode == 0){
+        if (mode == 0) {
             tvMasterModel.setText(R.string.manualMode);
-        }else {
+        } else {
             tvMasterModel.setText(R.string.automaticMode);
         }
-
-
     }
 
 
-
-
     /**
-     *
      * @param enable
      */
-    private void enableSilder(boolean enable){
+    private void enableSilder(boolean enable) {
         layoutRightSider.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -577,7 +574,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     /**
      * 显示任务路径
      */
-    private void showTaskPath(List<com.jms.cleanse.entity.file.POIPoint> points, String taskName) {
+    private void showTaskPath(List<POIPoint> points, String taskName) {
         mapView.setTestPOIS(points);
         switchMode(1);
         executeTask(taskName);
@@ -601,7 +598,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
 
     /**
-     *  清空路径
+     * 清空路径
      */
     private void clearPath() {
         mapView.setTestPOIS(null);

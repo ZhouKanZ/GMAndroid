@@ -11,6 +11,7 @@ public class POIPoint {
     private String name;
     private boolean state;
     private Position position;
+    private long time;
 
     public String getName() {
         return name;
@@ -32,7 +33,9 @@ public class POIPoint {
         return position;
     }
 
-    public void setPosition(Position position) {
-        this.position = position;
-    }
+    public void setPosition(Position position) {this.position = position;}
+
+    public long getTime() {return time;}
+
+    public void setTime(long time) {this.time = time;}
 }

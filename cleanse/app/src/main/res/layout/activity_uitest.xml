@@ -9,45 +9,9 @@
     android:padding="10dp"
     >
 
-    <com.jms.cleanse.widget.JMMapView
-        android:id="@+id/map_view"
-        android:layout_width="wrap_content"
-        android:layout_height="300dp"
-        />
-
-    <!-- 添加任务 -->
     <Button
-        android:id="@+id/add_task"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/map_view"
-        android:text="添加任务"
-        />
-
-    <!-- 选择是否消毒 -->
-    <Switch
-        android:id="@+id/cleanse"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/add_task"
-        android:text="消毒点"
-        />
-
-    <Button
-        android:id="@+id/btn_end"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/cleanse"
-        android:text="设为终点"
-        />
-
-    <!-- 完成 -->
-    <Button
-        android:id="@+id/btn_complete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="完成"
-        android:layout_below="@+id/btn_end"
-        />
+        android:id="@+id/btn_toast"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </RelativeLayout>

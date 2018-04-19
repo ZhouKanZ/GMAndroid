@@ -26,7 +26,7 @@ public class JMApplication extends Application {
         super.onCreate();
         context = getApplicationContext();
         boxStore = MyObjectBox.builder().androidContext(this).build();
-        SetLog.APPSend_Debug = true;
+        SetLog.APPSend_Debug = false;
 //        SetLog.recvJson_Debug = true;
         if (BuildConfig.DEBUG) {
             new AndroidObjectBrowser(boxStore).start(this);

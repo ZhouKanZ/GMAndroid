@@ -517,7 +517,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     /**
      * 添加点
      */
-    public void addPoint(boolean isCleanse) {
+    public void addPoint(boolean isCleanse,long time,double angle) {
         if (!isTaskEditing){
             return;
         }
@@ -527,7 +527,8 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         Position position = new Position();
         position.x = tempPos[0];
         position.y = tempPos[1];
-        position.yaw = 0;
+        position.yaw = angle;
+        tempTestPoi.setTime(time);
         tempTestPoi.setState(isCleanse);
         tempTestPoi.setPosition(position);
         testPOIS.add(tempTestPoi);

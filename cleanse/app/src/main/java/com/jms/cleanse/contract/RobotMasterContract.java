@@ -17,6 +17,7 @@ public class RobotMasterContract {
          */
          double[] getSpeed();
 
+        void showLoadMap(String mapName);
     }
 
     public interface Presenter {

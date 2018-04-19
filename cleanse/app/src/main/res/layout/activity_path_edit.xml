@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.jms.cleanse.ui.PathEditActivity">
@@ -41,24 +42,6 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-
-        <TextView
-
-            android:id="@+id/tv_cleanse_notice"
-            android:layout_width="match_parent"
-            android:text="@string/isCleanse"
-            android:layout_height="24dp"
-            android:background="@drawable/btn_cleanse_spec_background_selector"
-            android:textColor="@color/colorToolbarTitle"
-            android:textSize="@dimen/text_size_12sp"
-            android:gravity="center"
-            />
-        <!-- 是否为消毒点 -->
-        <Switch
-            android:id="@+id/isCleanse"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            />
 
         <Button
             android:id="@+id/btn_add"

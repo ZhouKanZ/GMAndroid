@@ -4,17 +4,25 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,7 +34,9 @@ import com.jms.cleanse.entity.file.POIPoint;
 import com.jms.cleanse.entity.file.POITask;
 import com.jms.cleanse.presenter.PathEditPresenter;
 import com.jms.cleanse.util.FileUtil;
+import com.jms.cleanse.widget.AngleWheelView;
 import com.jms.cleanse.widget.JMMapView;
+import com.jms.cleanse.widget.PointEditPopupWindow;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
@@ -35,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
@@ -64,10 +75,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     @BindView(R.id.task_list_layout)
     View taskListLayout;
     LinearLayout taskListController;
-    @BindView(R.id.tv_cleanse_notice)
-    TextView tvCleanseNotice;
-    @BindView(R.id.isCleanse)
-    Switch isCleanse;
     @BindView(R.id.btn_add)
     Button btnAdd;
     @BindView(R.id.btn_end)
@@ -79,14 +86,23 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     @BindView(R.id.toolbar_server_list)
     Toolbar toolbarServerList;
 
+    /* dialog中的view */
     Dialog namedDialog;
-    View view;
+    Dialog editDialog;
     EditText etNamedTask;
     Button btnSure;
     Button btnCancel;
+    AngleWheelView angleWheelView;
+    Switch isCleanse;
+    EditText editText;
+    Button btn;
+    ImageView imageView;
+    ImageView imageView2;
 
     private static int MODE_EDIT = 0X01;    // 编辑模式
     private static int MODE_LIST = 0X02;    // 列表模式
+    @BindView(R.id.layout)
+    RelativeLayout layout;
 
     private int current_mode = MODE_LIST;
     // 当前点是否是消毒点
@@ -95,7 +111,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
 
     private String taskName;
     private POITask seletedTask = null;
-    private long taskId = -1;
 
     @Override
     protected PathEditPresenter loadPresenter() {
@@ -110,38 +125,25 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     @Override
     protected void initData() {
 
-
         taskEntities = new ArrayList<>();
-//        mPresenter.objectBoxTest();
-//        mPresenter.setPoiJson();
         taskEntities = mPresenter.loadData();
         adapter = new CommonAdapter<POITask>(this, R.layout.item_task_info, taskEntities) {
-
             @Override
             protected void convert(ViewHolder holder, POITask poiTask, int position) {
                 holder.setText(R.id.tv_task_name, poiTask.getName());
             }
         };
-        isCleanse.setOnCheckedChangeListener(
-                new CompoundButton.OnCheckedChangeListener() {
-
-
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        cleanseable = isChecked;
-                    }
-                }
-        );
 
         // todo dialog 的大小异常
         namedDialog = new Dialog(this);
-        view = LayoutInflater.from(this).inflate(R.layout.dialog_task_name, null);
-        namedDialog.setContentView(view);
+        namedDialog.setContentView(R.layout.dialog_task_name);
+
+        editDialog = new Dialog(this);
+        editDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        editDialog.setContentView(R.layout.dialog_edit_point);
 
         hideRightLayout();
         ivTaskDelete.setEnabled(false);
-
-
     }
 
     @Override
@@ -150,15 +152,52 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         taskRv.setLayoutManager(new LinearLayoutManager(this));
         taskRv.setAdapter(adapter);
 
-        etNamedTask = view.findViewById(R.id.et_task_named);
-        btnSure = view.findViewById(R.id.btn_sure);
-        btnCancel = view.findViewById(R.id.btn_cancel);
+        etNamedTask = namedDialog.findViewById(R.id.et_task_named);
+        btnSure = namedDialog.findViewById(R.id.btn_sure);
+        btnCancel = namedDialog.findViewById(R.id.btn_cancel);
+
+        angleWheelView = editDialog.findViewById(R.id.angleWheelView);
+        isCleanse = editDialog.findViewById(R.id.switch1);
+        editText = editDialog.findViewById(R.id.editText);
+        btn = editDialog.findViewById(R.id.button);
+        imageView = editDialog.findViewById(R.id.imageView);
+        imageView2 = editDialog.findViewById(R.id.imageView2);
+
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                angleWheelView.subAngle();
+            }
+        });
+
+        imageView2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                angleWheelView.addAngle();
+            }
+        });
+
+        isCleanse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                cleanseable = isChecked;
+            }
+        });
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 获取角度、停留时间、是否消毒
+                String strTime = editText.getEditableText().toString();
+                long time = Long.valueOf(strTime);
+                mapView.addPoint(cleanseable,time,angleWheelView.getCurrentAngle());
+                editDialog.dismiss();
+            }
+        });
 
         btnSure.setOnClickListener(v -> namedTask());
         btnCancel.setOnClickListener(v -> dismissNamedDialog());
         setAdapterItemListener();
-
-
     }
 
 
@@ -179,7 +218,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             Toast.makeText(this, "朋友！您忘记给它命名了", Toast.LENGTH_SHORT).show();
         } else {
             current_mode = MODE_LIST;
-
             dismissNamedDialog();
             createTask(name);
             taskComplete();
@@ -326,7 +364,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
 
     @Override
     public void addPoint() {
-        mapView.addPoint(isCleansePoint());
+        editDialog.show();
     }
 
     @Override
@@ -384,6 +422,5 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     public void dismissNamedDialog() {
         namedDialog.dismiss();
     }
-
 
 }
