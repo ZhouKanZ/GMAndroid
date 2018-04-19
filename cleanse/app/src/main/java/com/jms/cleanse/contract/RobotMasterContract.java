@@ -1,5 +1,7 @@
 package com.jms.cleanse.contract;
 
+import android.widget.ImageView;
+
 import com.jms.cleanse.base.IView;
 
 /**
@@ -16,6 +18,8 @@ public class RobotMasterContract {
          *  设置速度
          */
          double[] getSpeed();
+
+         ImageView getIV();
 
     }
 

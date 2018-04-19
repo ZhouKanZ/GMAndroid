@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,7 +70,7 @@ public class MapSelectPopupWindow extends PopupWindow {
             @Override
             protected void convert(ViewHolder holder, MapTabSpec s, int position) {
                 holder.setText(R.id.tv_map_name, s.getMapName());
-                holder.setImageBitmap(R.id.iv_map_icon, s.getMap());
+                holder.setImageBitmap(R.id.iv_map_icon,s.getMap());
                 holder.setOnClickListener(R.id.item_map_layout, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -85,13 +84,15 @@ public class MapSelectPopupWindow extends PopupWindow {
                 requestOptions.placeholder(R.mipmap.ic_launcher);
                 requestOptions.error(R.drawable.map_unselected);
 
-                if (s.getMap() == null) {
-                    Log.i(TAG, "convert: bitmap is null");
-                }
-/*                Glide.with(context)
+               /* Glide.with(context)
                         .setDefaultRequestOptions(requestOptions)
-                        .load(s.getMap())
-                        .into((ImageView) holder.getView(R.id.iv_map_icon));*/
+                        .load(s.getMapBytes())
+                        .into(new SimpleTarget<Drawable>() {
+                            @Override
+                            public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
+                                holder.setImageDrawable(R.id.iv_map_icon, resource);
+                            }
+                        });*/
 //                }
             }
         };

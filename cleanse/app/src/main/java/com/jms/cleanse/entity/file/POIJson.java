@@ -1,7 +1,5 @@
 package com.jms.cleanse.entity.file;
 
-import com.jms.cleanse.widget.mapview.CustomPOI;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +15,7 @@ public class POIJson {
 
     private String version;
     private String encoding;
-    private List<CustomPOI> poi_info = new ArrayList<>();
+    private List<POIPoint> poi_info = new ArrayList<>();
     private List<Charge_points_Entity> charge_points_info = new ArrayList<>();
     private Map<String, List<String>> groups = new HashMap<>();
     private List<POITask> tasks = new ArrayList<>();
@@ -38,11 +36,11 @@ public class POIJson {
         this.encoding = encoding;
     }
 
-    public List<CustomPOI> getPoi_info() {
+    public List<POIPoint> getPoi_info() {
         return poi_info;
     }
 
-    public void setPoi_info(List<CustomPOI> poi_info) {
+    public void setPoi_info(List<POIPoint> poi_info) {
         this.poi_info = poi_info;
     }
 

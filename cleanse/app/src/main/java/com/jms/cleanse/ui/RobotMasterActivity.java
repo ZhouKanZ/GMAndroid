@@ -405,6 +405,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mapTabSpecs = mPresenter.getAllThumbnailMaps(thumbnailCache);
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
             popupWindow.notifyAdapter(mapTabSpecs);
+        }else {
+
         }
 
 
@@ -435,6 +437,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     public double[] getSpeed() {
         return speed;
+    }
+
+    @Override
+    public ImageView getIV() {
+        return testIv;
     }
 
     private static double convertAngleToRadians(double angle) {

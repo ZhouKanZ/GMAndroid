@@ -1,0 +1,8 @@
+
+esquid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(ÂÊôôþÿÿÿÿ
+esquid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(ßîÐáÿÿÿÿÿ
+hsquid:S00101"MRename this class name to match the regular expression '^[A-Z][a-zA-Z0-9]*$'.(ïºù…ýÿÿÿÿ
+?squid:S00108")Either remove or fill this block of code.(å¥ž‡
+›squid:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(ÿž“Èøÿÿÿÿ
+=squid:S1185"(Remove this method to simply inherit it.(Î¢ŽÈ
+Bsquid:S1185"(Remove this method to simply inherit it.(Ýßéàúÿÿÿÿ

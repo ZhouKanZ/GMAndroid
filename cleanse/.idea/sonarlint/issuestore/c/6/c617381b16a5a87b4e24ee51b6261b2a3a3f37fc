@@ -1,0 +1,13 @@
+
+xsquid:S1488"^Immediately return this expression instead of assigning it to the temporary variable "bitmap".(ËŒ°‡øÿÿÿÿ
+Ksquid:S1481"1Remove this unused "eventGetRawY" local variable.(›Îøÿÿÿÿ
+@squid:S1481"+Remove this unused "reason" local variable.(ß„èÇ
+Fsquid:S1612",Replace this lambda with a method reference.(ÀÑ€æşÿÿÿÿ
+Osquid:S1854":Remove this useless assignment to local variable "reason".(ß„èÇ
+Fsquid:S1481"1Remove this unused "eventGetRawX" local variable.(œœåŒ
+–squid:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(±ÈİÔ
+Zsquid:S1854"@Remove this useless assignment to local variable "eventGetRawY".(›Îøÿÿÿÿ
+Usquid:S1854"@Remove this useless assignment to local variable "eventGetRawX".(œœåŒ
+`squid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(ŸŠÛ‰
+esquid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(˜Ò¨‹ûÿÿÿÿ
+lsquid:S00117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(À¤Öäşÿÿÿÿ

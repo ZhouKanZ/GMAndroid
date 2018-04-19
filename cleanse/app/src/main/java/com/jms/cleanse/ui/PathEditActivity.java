@@ -36,8 +36,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
-import robot.boocax.com.sdkmodule.APPSend;
-import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 
 /**
  * @desc : 任务编辑
@@ -268,14 +266,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 break;
             case R.id.btn_start_task:
                 // 执行任务
-
                 backUpToMaster(taskName);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        APPSend.sendOrder_roaming(LoginEntity.robotMac, "test", 1, "false");
-                    }
-                }).start();
                 break;
             case R.id.iv_task_delete: // 删除任务
                 // 确定选择的任务

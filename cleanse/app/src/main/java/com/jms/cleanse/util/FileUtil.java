@@ -25,6 +25,7 @@ public class FileUtil {
             JMApplication.context.getFilesDir() + File.separator + "Boocax" + File.separator + "curDoc";
     public static final String POI_JSON = "poi.json";
     public static final String POI_TASK_JSON = "poitask.json";
+    public static final String MAP_PNG = "map.png";
     public static final int ADD = 0;
     public static final int DELETE = 1;
     public static final int UPDATE = 2;
