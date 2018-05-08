@@ -272,7 +272,7 @@ public class AngleWheelView extends View {
      *  角度增加 -- 注意边界判断
      */
     public void addAngle() {
-        if (currentAngle == 180){
+        if (Math.ceil(currentAngle) == 180){
             currentAngle = -179;
         }else {
             currentAngle++;
@@ -284,7 +284,7 @@ public class AngleWheelView extends View {
      *  角度减少 -- 注意边界判断
      */
     public void subAngle() {
-        if (currentAngle == -179){
+        if (Math.ceil(currentAngle)== -179){
             currentAngle = 180;
         }else {
             currentAngle--;

@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
 
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="33dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/colorPrimary"
-    app:contentInsetStart="22.5dp"
     app:contentInsetEnd="32.5dp"
-    >
+    app:contentInsetStart="22.5dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
         android:gravity="center_vertical"
-        >
+        android:orientation="horizontal">
 
         <!-- 当前地图 -->
         <TextView
@@ -23,14 +21,12 @@
             android:layout_height="wrap_content"
             android:text="@string/current_location"
             android:textColor="@color/colorToolbarTitle"
-            android:textSize="@dimen/text_size_12sp"
-            />
+            android:textSize="@dimen/text_size_12sp" />
 
         <View
             style="@style/toolbar_line_style"
             android:layout_marginLeft="22.5dp"
-            android:layout_toRightOf="@+id/tv_current_location"
-            />
+            android:layout_toRightOf="@+id/tv_current_location" />
 
 
         <!-- 当为自动模式的情况下显示-->
@@ -38,12 +34,11 @@
             android:id="@+id/tv_current_task"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="22.5dp"
             android:text="@string/current_task"
             android:textColor="@color/colorToolbarTitle"
             android:textSize="@dimen/text_size_12sp"
-            android:layout_marginLeft="22.5dp"
-            android:visibility="gone"
-            />
+            android:visibility="gone" />
 
         <!-- 任务分割线 -->
         <View
@@ -51,45 +46,38 @@
             style="@style/toolbar_line_style"
             android:layout_marginLeft="22.5dp"
             android:layout_toRightOf="@+id/tv_current_location"
-            android:visibility="gone"
-            />
+            android:visibility="gone" />
 
         <!-- 比重为1，占据剩余空间 -->
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
 
 
         <View
             style="@style/toolbar_line_style"
-            android:layout_toRightOf="@+id/tv_current_location"
-            />
+            android:layout_toRightOf="@+id/tv_current_location" />
 
         <com.jms.cleanse.widget.BatteryBar
             android:id="@+id/battery_bar"
             android:layout_width="33.5dp"
             android:layout_height="16dp"
-            android:src="@drawable/battery"
             android:layout_marginLeft="22.5dp"
-            />
+            android:src="@drawable/battery" />
 
+        <!-- 电量 -->
         <TextView
+            android:id="@+id/tvElectricity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorToolbarTitle"
-            android:textSize="@dimen/text_size_15sp"
             android:layout_marginLeft="14.5dp"
             android:text="@string/NA"
-            />
-
-
-
+            android:textColor="@color/colorToolbarTitle"
+            android:textSize="@dimen/text_size_15sp" />
 
 
     </LinearLayout>
-
-
 
 
 </android.support.v7.widget.Toolbar>

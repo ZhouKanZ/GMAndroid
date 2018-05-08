@@ -18,6 +18,11 @@ public class RobotMasterContract {
          double[] getSpeed();
 
         void showLoadMap(String mapName);
+
+        // 设置当前地图的名称 -- 在子线程中
+        void setLocalMapName(String mapName);
+
+        boolean getchecked();
     }
 
     public interface Presenter {
@@ -41,6 +46,7 @@ public class RobotMasterContract {
          *  取消导航
          */
         void cancelGoal();
+
     }
 
 }

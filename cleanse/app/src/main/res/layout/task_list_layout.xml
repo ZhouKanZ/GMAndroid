@@ -34,7 +34,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_below="@+id/toolbar_server_list"
-        android:background="@color/colorListBackground" />
+        android:background="@android:color/white" />
 
 
     <LinearLayout

@@ -166,14 +166,14 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                angleWheelView.subAngle();
+                angleWheelView.addAngle();
             }
         });
 
         imageView2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                angleWheelView.addAngle();
+                angleWheelView.subAngle();
             }
         });
 
@@ -189,9 +189,13 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             public void onClick(View v) {
                 // 获取角度、停留时间、是否消毒
                 String strTime = editText.getEditableText().toString();
-                long time = Long.valueOf(strTime);
-                mapView.addPoint(cleanseable,time,angleWheelView.getCurrentAngle());
-                editDialog.dismiss();
+                if (!TextUtils.isEmpty(strTime)){
+                    long time = Long.valueOf(strTime);
+                    mapView.addPoint(cleanseable,time,angleWheelView.getCurrentAngle());
+                    editDialog.dismiss();
+                }else {
+                    Toast.makeText(PathEditActivity.this,"停留时间不可为空",Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -211,6 +215,12 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         // 任务没有添加点
         if (mapView.getTestPOIS().size() == 0) {
             Toast.makeText(this, "不要忘记给任务添加消毒路径!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 任务没有添加点
+        if (mapView.getTestPOIS().size() < 2) {
+            Toast.makeText(this, "路径任务最低包含两个点!", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -235,6 +245,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         adapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
+
                 POITask poiTask = taskEntities.get(position);
                 taskName = poiTask.getName();
                 seletedTask = taskEntities.get(position);
@@ -248,7 +259,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 return false;
             }
         });
-
     }
 
     /**

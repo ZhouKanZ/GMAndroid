@@ -1,37 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_task"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="3dp"
-    android:background="@android:color/white"
+    android:addStatesFromChildren="true"
+    android:clickable="true"
+    android:background="?android:attr/selectableItemBackground"
     android:paddingBottom="6dp"
     android:paddingLeft="10dp"
     android:paddingTop="6dp">
 
-    <!--android:background="@color/task_item_background_color_selector"-->
 
     <TextView
         android:id="@+id/tv_task_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/task_title_left_indicator"
         android:drawablePadding="7dp"
+        android:drawableStart="@drawable/task_title_left_indicator"
         android:text="任务一"
         android:textColor="@color/colorTextTitle"
-        android:textSize="@dimen/text_size_12sp"
-        android:drawableStart="@drawable/task_title_left_indicator"
-        android:drawableLeft="@drawable/task_title_left_indicator" />
+        android:textSize="@dimen/text_size_12sp" />
 
-   <!--  任务是否在执行
-    <TextView
-        android:id="@+id/tv_task_is_executing"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="2dp"
-        android:text="正在执行"
-        android:textColor="@color/colorTextSelected"
-        android:textSize="@dimen/text_size_9sp" />-->
+    <!--  任务是否在执行
+     <TextView
+         android:id="@+id/tv_task_is_executing"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_alignParentRight="true"
+         android:layout_marginRight="10dp"
+         android:layout_marginTop="2dp"
+         android:text="正在执行"
+         android:textColor="@color/colorTextSelected"
+         android:textSize="@dimen/text_size_9sp" />-->
 
     <View
         android:id="@+id/first_line"

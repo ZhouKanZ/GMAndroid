@@ -122,6 +122,7 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
             TCP_CONN.loopMark = true;                   //开启TCP主循环;
             startService(new Intent(this, MyService_verify.class));
             startActivity(new Intent(ServerListActivity.this, RobotMasterActivity.class));
+            this.finish();
         } else if ("true".equals(isLock)) {                                                 //有密码登录(跳转至SignActivity页面)
 //            startActivity(intent);                      //跳转至SignActivity页面
             Toast.makeText(this, "服务器被加锁", Toast.LENGTH_SHORT).show();

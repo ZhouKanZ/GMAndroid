@@ -39,6 +39,7 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.AllMapInfo;
  */
 public class PathEditPresenter extends BasePresenter<PathEditContract.View> implements PathEditContract.Presenter {
 
+    private POIJson poiJson;
 
     private static final String TAG = "PathEditPresenter";
     private Box<PoiTask> poiTaskBox;
@@ -98,8 +99,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
      */
     private void updatePoiJson(POITask poiTask, int tag) {
 
-        POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
-
         List<CustomPOI> poiList = new ArrayList<>();
         List<String> group = new ArrayList<>();
 
@@ -125,7 +124,8 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
                 poiJson.getTasks().add(poiTask);
                 break;
             case FileUtil.DELETE:
-                for (CustomPOI customPOI : poiList) {
+
+                for (CustomPOI customPOI : poiList) { // 同一对象才可以删除
                     poiJson.getPoi_info().remove(customPOI);
                 }
                 poiJson.getGroups().remove(poiTask.getName());
@@ -154,7 +154,7 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
      */
     public List<POITask> loadData() {
 
-        POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
+        poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
         Map<String, List<String>> groups = poiJson.getGroups();
         List<CustomPOI> poi_info = poiJson.getPoi_info();
         List<POITask> poiTasks = poiJson.getTasks();

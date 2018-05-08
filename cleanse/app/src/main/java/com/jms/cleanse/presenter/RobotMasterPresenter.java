@@ -26,12 +26,14 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
+import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.Map_param;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
+import robot.boocax.com.sdkmodule.utils.sdk_utils.SendUtil;
 
 /**
  * Created by zhoukan on 2018/3/28.
@@ -42,9 +44,12 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
 public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View> implements RobotMasterContract.Presenter {
 
     private static final String TAG = "RobotMasterPresenter";
-    Disposable loopDispose;
+    private Disposable loopDispose;
+    private Disposable commadnDispose;
+
 
     private List<MapTabSpec> mapTabSpecs;
+
     @Override
     public void onCreate() {
 
@@ -56,7 +61,7 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         EventBus.getDefault().unregister(this);
     }
 
-    public void initData(){
+    public void initData() {
         mapTabSpecs = new ArrayList<>();
     }
 
@@ -69,6 +74,14 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
                 .observeOn(Schedulers.io())
                 .subscribe(along -> APPSend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2]));
 
+
+        String centent = "{\"message_type\":\"custom_data\",\"data\":" + getView().getchecked()+ ",\"robot_mac_address\":" + '\"' + LoginEntity.robotMac + '\"' + "}";
+        commadnDispose = Observable
+                .interval(400, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(along -> SendUtil.send(centent, TCP_CONN.channel));
+
     }
 
     @Override
@@ -78,7 +91,7 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         }
     }
 
-    public void popupWindowOnClick(int position){
+    public void popupWindowOnClick(int position) {
 
         Log.i(TAG, "onClick: " + mapTabSpecs.get(position).getMapName());
         Observable.just(mapTabSpecs.get(position).getMapName())
@@ -87,9 +100,9 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String mapName) throws Exception {
-
+                        // 设置当前地图的名称
+                        getView().setLocalMapName(mapName);
                         APPSend.sendApply_map(mapName);
-
                     }
                 }, new Consumer<Throwable>() {
                     @Override
@@ -99,11 +112,11 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
                 });
     }
 
-    public void showMapList(){
+    public void showMapList() {
         requestAllMapInfo();
     }
 
-    public Bitmap loadMapPng(){
+    public Bitmap loadMapPng() {
         byte[] mapBytes = FileUtil.readPng("map.png");
         if (mapBytes != null) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
@@ -130,7 +143,7 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     }
 
     // 得到缩略图
-    public List<MapTabSpec> getAllThumbnailMaps(ThumbnailCache thumbnailCache){
+    public List<MapTabSpec> getAllThumbnailMaps(ThumbnailCache thumbnailCache) {
         MapTabSpec mapTabSpec = new MapTabSpec();
         String map_name = thumbnailCache.getThumbnail().getMap_name();
         mapTabSpec.setMapName(map_name);
@@ -143,6 +156,7 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         Log.i(TAG, "getAllThumbnailMap: " + mapTabSpec.getMapName() + ", size = " + mapTabSpecs.size());
         return mapTabSpecs;
     }
+
     /**
      * 抬起手指获取屏幕坐标.
      */
@@ -150,8 +164,8 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     public void getRelift(UpliftScreenPosition upliftScreenPosition) {
         float eventGetRawX = upliftScreenPosition.getX();
         float eventGetRawY = upliftScreenPosition.getY();
-//        Log.i("抬起手指", "X= " + eventGetRawX);
-//        Log.i("抬起手指", "Y= " + eventGetRawY);
+        //        Log.i("抬起手指", "X= " + eventGetRawX);
+        //        Log.i("抬起手指", "Y= " + eventGetRawY);
     }
 
 
@@ -167,21 +181,21 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     }
 
     /**
-     *  获取当前地图的信息
+     * 获取当前地图的信息
+     *
      * @param map_param
      */
-    @Subscribe(threadMode=ThreadMode.POSTING)
+    @Subscribe(threadMode = ThreadMode.POSTING)
     public void getMap_info(Map_param map_param) {
-        if(map_param!=null&&map_param.getMapParam()!=null){
-            All_file_info.MapInfoBean param=map_param.getMapParam();
+        if (map_param != null && map_param.getMapParam() != null) {
+            All_file_info.MapInfoBean param = map_param.getMapParam();
             String mapName = param.getName();
-            if (!TextUtils.isEmpty(mapName)){
+            if (!TextUtils.isEmpty(mapName)) {
                 getView().showLoadMap(mapName);
             }
 
         }
     }
-
 
 
     @Override

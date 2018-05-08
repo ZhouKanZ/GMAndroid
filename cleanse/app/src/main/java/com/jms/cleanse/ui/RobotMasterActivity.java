@@ -1,5 +1,6 @@
 package com.jms.cleanse.ui;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,14 +11,17 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonNull;
 import com.jms.cleanse.R;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.config.RobotConfig;
@@ -56,12 +60,14 @@ import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.LongPressPositionEntity;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.OtherJson;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ShortPressScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.TempMapBytes;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Move_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
@@ -73,6 +79,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private static final String TAG = "RobotMasterActivity";
     private static final int REQUEST_CODE = 0X01;
+    private boolean isChecked = false;
 
     @BindView(R.id.ib_task_list)
     ImageView ibTaskList;
@@ -99,9 +106,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @BindView(R.id.battery_bar)
     BatteryBar batteryBar;
 
-    @BindView(R.id.test_iv)
-    ImageView testIv;
-
     List<TestPOI> testPOIS;
 
     double[] speed = new double[3];
@@ -112,13 +116,16 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @BindView(R.id.iv_urgent)
     ImageView ivUrgent;
     @BindView(R.id.tv_current_location)
-    TextView tvCurrentLocation;
+    TextView tvCurrentLocation;   // 当前地图的名称
     @BindView(R.id.tv_current_task)
-    TextView tvCurrentTask;
+    TextView tvCurrentTask;       // 当前任务的名称
     @BindView(R.id.line_task_div)
     View lineTaskDiv;
+    @BindView(R.id.tvElectricity)
+    TextView tvElectricity;
     private All_map_info allMapInfo;
     private List<MapTabSpec> mapTabSpecs;
+    private ProgressDialog progressBar;
 
     @Override
     protected RobotMasterPresenter loadPresenter() {
@@ -146,6 +153,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 float toolBarHeight = DisplayUtil.dip2px(RobotMasterActivity.this, 33);
             }
         });
+
+        progressBar = new ProgressDialog(this);
     }
 
     @Override
@@ -169,6 +178,14 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         }
 
         rockerview.setOnAngleChangeListener(this);
+        switchUpperComputer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                RobotMasterActivity.this.isChecked = isChecked;
+                // showProgress
+                progressBar.show();
+            }
+        });
     }
 
 
@@ -206,6 +223,16 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getLongPress(LongPressPositionEntity longPressPositionEntity) {
         if (longPressPositionEntity != null) {
+        }
+    }
+
+    /**
+     * 长按传来的位置坐标(实际坐标)
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getOtherJson(OtherJson json) {
+        if (json != null) {
+            // 将字符转换成对应的对象再对照对应的开关量
         }
     }
 
@@ -347,7 +374,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void getAllMapInfo(All_map_info allMapInfo) {
 
-
         Gson gson = new Gson();
         Log.i(TAG, "getAllMapInfo: " + allMapInfo.getAll_map_info().size());
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
@@ -413,12 +439,19 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mapTabSpecs = mPresenter.getAllThumbnailMaps(thumbnailCache);
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
             popupWindow.notifyAdapter(mapTabSpecs);
+
+
         }
 
 
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getReport(Move_status move_status) {
+        Log.d(TAG, "getReport: " + move_status.getMove_status());
+    }
+
+    @Subscribe(threadMode = ThreadMode.POSTING)
     public void getOBD(OBD obd) {
 
         Gson gson = new Gson();
@@ -429,7 +462,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 .subscribe(new Consumer<Long>() {
                     @Override
                     public void accept(Long aLong) throws Exception {
-                        batteryBar.updateCharge(Float.valueOf(obds[5]));
+                        float ele = Float.valueOf(obds[5]);
+                        batteryBar.updateCharge(ele);
+                        tvElectricity.setText((int) Math.ceil((double) ele) + "%");
 //                        Log.i(TAG, "getOBD: " + s);
                     }
                 }, new Consumer<Throwable>() {
@@ -448,6 +483,21 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     public void showLoadMap(String mapName) {
 
+    }
+
+    @Override
+    public void setLocalMapName(String mapName) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                tvCurrentLocation.setText(getResources().getString(R.string.current_location) + mapName);
+            }
+        });
+    }
+
+    @Override
+    public boolean getchecked() {
+        return this.isChecked;
     }
 
     private static double convertAngleToRadians(double angle) {
@@ -512,6 +562,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
      */
     private void queryTask(String taskName) {
         Log.d(TAG, "queryTask: " + taskName);
+
+        setCurrentTaskName(taskName);
+
         POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
         for (POITask task : poiJson.getTasks()) {
             if (taskName.equals(task.getName())) {
@@ -520,6 +573,17 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             }
         }
 
+    }
+
+    /**
+     * 设置当前任务的名称
+     *
+     * @param taskName
+     */
+    private void setCurrentTaskName(String taskName) {
+        lineTaskDiv.setVisibility(View.VISIBLE);
+        tvCurrentTask.setVisibility(View.VISIBLE);
+        tvCurrentTask.setText(getResources().getString(R.string.current_task) + taskName);
     }
 
     /**
@@ -589,11 +653,17 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     public void onViewClicked() {
         mPresenter.cancelGoal();
         // 将rockerView
+        dismissTaskName();
         showRockerView();
         switchMode(0);
         hideUrgentImage();
         clearPath();
         enableSilder(true);
+    }
+
+    private void dismissTaskName() {
+        lineTaskDiv.setVisibility(View.GONE);
+        tvCurrentTask.setVisibility(View.GONE);
     }
 
 

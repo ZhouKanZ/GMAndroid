@@ -61,8 +61,11 @@ public class LoginActivity extends BaseActivity {
 
     @OnClick(R.id.btn_login)
     public void onViewClicked() {
-        if (judgeUserInfo())
+        // 满足登陆条件后 不再需要登陆
+        if (judgeUserInfo()){
             startActivity(new Intent(LoginActivity.this, ServerListActivity.class));
+            this.finish();
+        }
     }
 
     /**
