@@ -1,6 +1,0 @@
-
-tsquid:S1450"`Remove the "itemClickListener" field and declare it as a local variable in the relevant methods.(ÓÍßy
-Isquid:S1068"5Remove this unused "itemClickListener" private field.(ÓÍßy
-Asquid:S1068"'Remove this unused "TAG" private field.(š®ûÿÿÿÿ
-_squid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(–Èó}
-lsquid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(ˆ“«Ëşÿÿÿÿ8¯¸şº­,

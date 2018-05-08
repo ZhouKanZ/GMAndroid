@@ -1,7 +1,5 @@
 package com.jms.cleanse.entity.map;
 
-import android.graphics.Bitmap;
-
 /**
  * Created by WangJun on 2018/4/11.
  *
@@ -11,7 +9,7 @@ import android.graphics.Bitmap;
 public class MapTabSpec {
 
     String mapName;
-    Bitmap map;
+    byte[] data;
 
     public String getMapName() {
         return mapName;
@@ -21,11 +19,11 @@ public class MapTabSpec {
         this.mapName = mapName;
     }
 
-    public Bitmap getMap() {
-        return map;
+    public byte[] getData() {
+        return data;
     }
 
-    public void setMap(Bitmap map) {
-        this.map = map;
+    public void setData(byte[] data) {
+        this.data = data;
     }
 }

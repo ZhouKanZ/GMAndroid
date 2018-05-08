@@ -9,8 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
 
-import com.bumptech.glide.request.RequestOptions;
 import com.jms.cleanse.R;
+import com.jms.cleanse.async.BitmapWorkTask;
 import com.jms.cleanse.entity.map.MapTabSpec;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
@@ -70,7 +70,9 @@ public class MapSelectPopupWindow extends PopupWindow {
             @Override
             protected void convert(ViewHolder holder, MapTabSpec s, int position) {
                 holder.setText(R.id.tv_map_name, s.getMapName());
-                holder.setImageBitmap(R.id.iv_map_icon,s.getMap());
+
+                BitmapWorkTask bitmapWorkTask = new BitmapWorkTask(holder.getView(R.id.iv_map_icon));
+                bitmapWorkTask.execute(s.getData());
                 holder.setOnClickListener(R.id.item_map_layout, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -80,9 +82,9 @@ public class MapSelectPopupWindow extends PopupWindow {
                     }
                 });
 
-                RequestOptions requestOptions = new RequestOptions();
-                requestOptions.placeholder(R.mipmap.ic_launcher);
-                requestOptions.error(R.drawable.map_unselected);
+//                RequestOptions requestOptions = new RequestOptions();
+//                requestOptions.placeholder(R.mipmap.ic_launcher);
+//                requestOptions.error(R.drawable.map_unselected);
 
                /* Glide.with(context)
                         .setDefaultRequestOptions(requestOptions)

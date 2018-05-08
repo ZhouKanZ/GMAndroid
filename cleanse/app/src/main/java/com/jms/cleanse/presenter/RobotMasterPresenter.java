@@ -132,9 +132,7 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         String map_name = thumbnailCache.getThumbnail().getMap_name();
         mapTabSpec.setMapName(map_name);
         byte[] mapBytes = Base64.decode(thumbnailCache.getThumbnail().getContent(), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
-        getView().getIV().setImageBitmap(bitmap);
-        mapTabSpec.setMap(bitmap);
+        mapTabSpec.setData(mapBytes);
         mapTabSpecs.add(mapTabSpec);
         Log.i(TAG, "getAllThumbnailMap: " + mapTabSpec.getMapName() + ", size = " + mapTabSpecs.size());
         return mapTabSpecs;
