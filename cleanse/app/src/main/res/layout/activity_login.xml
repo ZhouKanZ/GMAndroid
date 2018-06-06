@@ -16,12 +16,11 @@
         android:src="@drawable/logo_round" />
 
     <android.support.v7.widget.CardView
-        android:layout_width="match_parent"
+        android:layout_width="350dp"
         android:layout_height="@dimen/user_input_height"
         android:layout_below="@+id/iv_logo_round"
-        android:layout_marginLeft="@dimen/user_input_marginLeft"
-        android:layout_marginRight="@dimen/user_input_marginRight"
         android:layout_marginTop="@dimen/user_input_marginTop"
+        android:layout_centerHorizontal="true"
         app:cardBackgroundColor="@android:color/white"
         app:cardCornerRadius="@dimen/user_input_card_radius"
         app:cardElevation="@dimen/user_input_card_elevation">

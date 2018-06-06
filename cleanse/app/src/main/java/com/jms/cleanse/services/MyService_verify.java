@@ -57,7 +57,7 @@ public class MyService_verify extends Service {
                         LoginEntity.user_name, LoginEntity.password, LoginEntity.salt, true);
                 //建立TCP长连接,参数依次为:服务器IP,用户名(可为null),密码(可为null),盐(可为null),boolean(是否自动请求文件);
             } else {
-
+                // 不可能为空
             }
 
         }

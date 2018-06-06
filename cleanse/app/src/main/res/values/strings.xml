@@ -4,7 +4,7 @@
     <string name="server_list">服务器列表</string>
     <string name="name_notice">名称：</string>
     <string name="ip_notice">IP地址：</string>
-    <string name="current_location">当前场景:</string>
+    <string name="current_location">导航状态</string>
     <string name="NA">N/A</string>
     <string name="manualMode">手动模式</string>
     <string name="automaticMode">自动模式</string>
@@ -20,6 +20,13 @@
     <string name="input_path_name">请输入路径名称</string>
     <string name="ensure">确定</string>
     <string name="cancel">取消</string>
-    <string name="current_task">当前任务:</string>
+    <string name="current_task">当前任务</string>
     <string name="timeKeeper">停留时间(S)</string>
+    <string name="connstatus">连接状态</string>
+    <string name="pos_status">定位状态</string>
+    <string name="nothing">无</string>
+    <string name="recorder">工作日志</string>
+    <string name="path">路径</string>
+    <string name="start_date">开始时间</string>
+    <string name="end_date">结束时间</string>
 </resources>

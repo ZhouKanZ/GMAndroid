@@ -29,11 +29,7 @@ public class ServerListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_list);
-
         server_info_rv = findViewById(R.id.server_info_rv);
-
-        initData();
-
         adapter = new CommonAdapter<ServerEntity>(this, R.layout.item_server_info, serverEntities) {
             @Override
             protected void convert(final ViewHolder holder, final ServerEntity serverEntity, final int position) {
@@ -50,7 +46,7 @@ public class ServerListActivity extends AppCompatActivity {
                             adapter.notifyItemChanged(lastExpandPosition);
                         }
 
-                        if (serverEntity.getRobotEntityList() != null && serverEntity.getRobotEntityList().size()>0){
+                        if (serverEntity.getRobotEntityList() != null && serverEntity.getRobotEntityList().size() > 0) {
                             serverEntity.setItemIsExpand(!serverEntity.isItemIsExpand());
                             adapter.notifyItemChanged(position);
                         }
@@ -65,7 +61,7 @@ public class ServerListActivity extends AppCompatActivity {
                     holder.getView(R.id.robot_rv).setVisibility(View.GONE);
                 }
 
-                if (holder.getView(R.id.robot_rv).getVisibility() == View.VISIBLE && serverEntity.getRobotEntityList() != null &&serverEntity.getRobotEntityList().size() > 0) {
+                if (holder.getView(R.id.robot_rv).getVisibility() == View.VISIBLE && serverEntity.getRobotEntityList() != null && serverEntity.getRobotEntityList().size() > 0) {
                     final RecyclerView robot__rv = ((RecyclerView) holder.getView(R.id.robot_rv));
                     robot__rv.setHasFixedSize(false);
                     robot__rv.setLayoutManager(new LinearLayoutManager(ServerListActivity.this, LinearLayoutManager.HORIZONTAL, false));
@@ -79,9 +75,7 @@ public class ServerListActivity extends AppCompatActivity {
                             holder.setOnClickListener(R.id.iv_robot_logo, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-
-                                    // 跳转到下一个页面中
-                                startActivity(new Intent(ServerListActivity.this, RobotMasterActivity.class));
+                                    startActivity(new Intent(ServerListActivity.this, RobotMasterActivity.class));
                                 }
                             });
                         }
@@ -93,42 +87,6 @@ public class ServerListActivity extends AppCompatActivity {
         server_info_rv.setHasFixedSize(false);
         server_info_rv.setLayoutManager(new LinearLayoutManager(this));
         server_info_rv.setAdapter(adapter);
-
-    }
-
-    private void initData() {
-
-        serverEntities = new ArrayList<>();
-        ServerEntity s1 = new ServerEntity("JM_SERVER_DINNER", "192.168.2.188");
-        List<RobotEntity> robotEntities = new ArrayList<>();
-        robotEntities.add(new RobotEntity("科比"));
-        robotEntities.add(new RobotEntity("奥利尔"));
-        robotEntities.add(new RobotEntity("奥多姆"));
-        robotEntities.add(new RobotEntity("本泽马"));
-        s1.setRobotEntityList(robotEntities);
-        serverEntities.add(s1);
-        serverEntities.add(new ServerEntity("JM_SERVER_KITCHEN", "192.168.0.123"));
-        serverEntities.add(new ServerEntity("JM_SERVER_DINNER", "192.168.2.188"));
-        serverEntities.add(new ServerEntity("JM_SERVER_KITCHEN", "192.168.0.123"));
-        serverEntities.add(new ServerEntity("JM_SERVER_DINNER", "192.168.2.188"));
-        serverEntities.add(new ServerEntity("JM_SERVER_KITCHEN", "192.168.0.123"));
-        serverEntities.add(new ServerEntity("JM_SERVER_DINNER", "192.168.2.188"));
-        serverEntities.add(new ServerEntity("JM_SERVER_KITCHEN", "192.168.0.123"));
-        serverEntities.add(new ServerEntity("JM_SERVER_DINNER", "192.168.2.188"));
-
-        ServerEntity s2 = new ServerEntity("JM_SERVER_DINNER", "192.168.2.188");
-        List<RobotEntity> robotEntities2 = new ArrayList<>();
-        robotEntities2.add(new RobotEntity("科比"));
-        robotEntities2.add(new RobotEntity("奥利尔"));
-        robotEntities2.add(new RobotEntity("奥多姆"));
-        robotEntities2.add(new RobotEntity("本泽马"));
-        s2.setRobotEntityList(robotEntities2);
-
-
-        serverEntities.add(s2);
-        serverEntities.add(new ServerEntity("JM_SERVER_DINNER", "192.168.2.188"));
-        serverEntities.add(new ServerEntity("JM_SERVER_KITCHEN", "192.168.0.123"));
-        serverEntities.add(new ServerEntity("JM_SERVER_HOUSE", "192.168.4.55"));
 
     }
 

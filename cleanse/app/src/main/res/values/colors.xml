@@ -12,6 +12,12 @@
     <color name="colorTextContentTitle">#aaaaaa</color>
     <color name="colorToolbarTitle">@android:color/white</color>
     <color name="colorTextContentMain">#616161</color>
+    <color name="warning">#ffa525</color>
+    <color name="error">#e35757</color>
+    <color name="info">@color/colorToolbarTitle</color>
+    <!-- 指示器颜色 -->
+    <color name="colorIndicator">#666666</color>
+
 
 
     <!-- commond color -->

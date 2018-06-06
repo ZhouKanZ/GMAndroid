@@ -3,67 +3,173 @@
 
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="33dp"
+    android:layout_height="50dp"
     android:background="@color/colorPrimary"
-    app:contentInsetEnd="32.5dp"
-    app:contentInsetStart="22.5dp">
+    app:contentInsetEnd="0dp"
+    app:contentInsetStart="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="10dp">
 
-        <!-- 当前地图 -->
-        <TextView
-            android:id="@+id/tv_current_location"
+        <!-- 当前地图 118-->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/current_location"
-            android:textColor="@color/colorToolbarTitle"
-            android:textSize="@dimen/text_size_12sp" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_current_location"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/current_location"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp" />
+
+            <TextView
+                android:id="@+id/tv_loc"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center_horizontal"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp" />
+
+        </LinearLayout>
+
 
         <View
             style="@style/toolbar_line_style"
-            android:layout_marginLeft="22.5dp"
-            android:layout_toRightOf="@+id/tv_current_location" />
+            android:layout_marginTop="3dp" />
 
-
-        <!-- 当为自动模式的情况下显示-->
-        <TextView
-            android:id="@+id/tv_current_task"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="22.5dp"
-            android:text="@string/current_task"
-            android:textColor="@color/colorToolbarTitle"
-            android:textSize="@dimen/text_size_12sp"
-            android:visibility="gone" />
+            android:orientation="vertical">
 
-        <!-- 任务分割线 -->
+            <TextView
+                android:id="@+id/tv_current_task"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/current_task"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/tv_task"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center_horizontal"
+                android:text="@string/nothing"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp"
+                android:visibility="visible" />
+        </LinearLayout>
+
+        <!-- 当为自动模式的情况下显示 128-->
+
+
         <View
+            style="@style/toolbar_line_style"
+            android:layout_marginTop="3dp" />
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 当为自动模式的情况下显示 126-->
+            <TextView
+                android:id="@+id/tv_status_conn"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/connstatus"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp"
+                android:visibility="visible" />
+
+            <!-- 当为自动模式的情况下显示 126-->
+            <TextView
+                android:id="@+id/tv_conn"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp"
+                android:visibility="visible" />
+
+        </LinearLayout>
+
+
+        <View
+            style="@style/toolbar_line_style"
+            android:layout_marginTop="3dp" />
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 当为自动模式的情况下显示 126-->
+            <TextView
+                android:id="@+id/tv_status_pos"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:text="@string/pos_status"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp"
+                android:visibility="visible" />
+
+            <!-- 当为自动模式的情况下显示 126-->
+            <TextView
+                android:id="@+id/tv_pos"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:textColor="@color/colorToolbarTitle"
+                android:textSize="@dimen/text_size_12sp"
+                android:visibility="visible" />
+
+        </LinearLayout>
+
+
+        <View
+            style="@style/toolbar_line_style"
+            android:layout_marginTop="3dp" />
+
+
+        <!--任务分割线 -->
+        <!--<View
             android:id="@+id/line_task_div"
             style="@style/toolbar_line_style"
             android:layout_marginLeft="22.5dp"
             android:layout_toRightOf="@+id/tv_current_location"
-            android:visibility="gone" />
+            android:visibility="gone" />-->
 
         <!-- 比重为1，占据剩余空间 -->
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1" />
-
-
-        <View
+        <!--<View
             style="@style/toolbar_line_style"
-            android:layout_toRightOf="@+id/tv_current_location" />
+            android:layout_toRightOf="@+id/tv_current_location" />-->
 
         <com.jms.cleanse.widget.BatteryBar
             android:id="@+id/battery_bar"
             android:layout_width="33.5dp"
             android:layout_height="16dp"
-            android:layout_marginLeft="22.5dp"
+            android:layout_marginTop="7dp"
             android:src="@drawable/battery" />
 
         <!-- 电量 -->
@@ -72,6 +178,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="14.5dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginTop="5dp"
             android:text="@string/NA"
             android:textColor="@color/colorToolbarTitle"
             android:textSize="@dimen/text_size_15sp" />

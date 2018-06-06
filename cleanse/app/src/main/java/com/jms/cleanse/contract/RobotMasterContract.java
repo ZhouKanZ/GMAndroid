@@ -47,6 +47,10 @@ public class RobotMasterContract {
          */
         void cancelGoal();
 
+        /**
+         *  重定位
+         */
+        void reset();
     }
 
 }

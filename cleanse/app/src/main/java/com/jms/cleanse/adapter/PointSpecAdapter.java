@@ -3,6 +3,8 @@ package com.jms.cleanse.adapter;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
+import io.reactivex.Observable;
+
 /**
  * Created by zhoukan on 2018/4/10.
  *

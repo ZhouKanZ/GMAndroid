@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,7 +19,6 @@ import com.jms.cleanse.config.UserConfig;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import robot.boocax.com.sdkmodule.view.BoocaxMapView;
 
 /**
  * Created by WangJun on 2018/3/19.
@@ -62,7 +62,10 @@ public class LoginActivity extends BaseActivity {
     @OnClick(R.id.btn_login)
     public void onViewClicked() {
         // 满足登陆条件后 不再需要登陆
-        if (judgeUserInfo()){
+
+        Log.d("click", "onViewClicked: " + judgeUserInfo());
+
+        if (judgeUserInfo()) {
             startActivity(new Intent(LoginActivity.this, ServerListActivity.class));
             this.finish();
         }

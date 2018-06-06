@@ -48,12 +48,14 @@
     <LinearLayout
         android:id="@+id/layout_right_sider"
         android:layout_width="57dp"
-        android:layout_height="177dp"
+        android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:background="@drawable/master_slider_background"
         android:gravity="center_horizontal"
         android:orientation="vertical"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
         >
 
         <ImageView
@@ -61,7 +63,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/task"
-            android:layout_marginTop="16.5dp"
             />
 
 
@@ -70,15 +71,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/map"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="25dp"
             />
 
         <ImageView
-            android:id="@+id/ib_server_list"
+            android:id="@+id/ib_plan_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/setting"
-            android:layout_marginTop="30dp"
+            android:src="@drawable/plan"
+            android:layout_marginTop="25dp"
+            />
+
+        <ImageView
+            android:id="@+id/ib_recorder_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/recoder"
+            android:layout_marginTop="25dp"
             />
 
     </LinearLayout>
@@ -107,6 +116,15 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentBottom="true"
         android:visibility="gone"
+        />
+
+    <ImageView
+        android:id="@+id/reset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/reset"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="22dp"
         />
 
 

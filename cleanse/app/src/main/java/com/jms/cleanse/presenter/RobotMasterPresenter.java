@@ -1,12 +1,20 @@
 package com.jms.cleanse.presenter;
 
+import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.jms.cleanse.base.BasePresenter;
+import com.jms.cleanse.bean.MSG_TYPE;
+import com.jms.cleanse.bean.MotorOnOff;
 import com.jms.cleanse.contract.RobotMasterContract;
 import com.jms.cleanse.entity.map.MapTabSpec;
 import com.jms.cleanse.entity.robot.LaserEntity;
@@ -33,7 +41,10 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
+import robot.boocax.com.sdkmodule.utils.sdk_utils.GsonUtil;
 import robot.boocax.com.sdkmodule.utils.sdk_utils.SendUtil;
+
+import static com.jms.cleanse.bean.CustomCommandKt.appendCustomCommand;
 
 /**
  * Created by zhoukan on 2018/3/28.
@@ -46,13 +57,13 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     private static final String TAG = "RobotMasterPresenter";
     private Disposable loopDispose;
     private Disposable commadnDispose;
+    private MotorOnOff motorOnOff = new MotorOnOff("off");
 
 
     private List<MapTabSpec> mapTabSpecs;
 
     @Override
     public void onCreate() {
-
         EventBus.getDefault().register(this);
     }
 
@@ -63,25 +74,30 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
 
     public void initData() {
         mapTabSpecs = new ArrayList<>();
+
     }
 
     @Override
     public void doLoopSendMove() {
         // 间隔100ms发一次指令
         loopDispose = Observable
-                .interval(100, TimeUnit.MILLISECONDS)
+                .interval(200, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(along -> APPSend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2]));
+                .subscribe(along ->
+                                APPSend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2]), e -> Log.d(TAG, "doLoopSendMove: " + e.fillInStackTrace().toString())
+                );
 
+    }
 
-        String centent = "{\"message_type\":\"custom_data\",\"data\":" + getView().getchecked()+ ",\"robot_mac_address\":" + '\"' + LoginEntity.robotMac + '\"' + "}";
-        commadnDispose = Observable
-                .interval(400, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
+    public void motor_onoff() {
+
+        motorOnOff.setState(getView().getchecked() ? "on" : "off");
+        String content = appendCustomCommand(motorOnOff, LoginEntity.robotMac, MSG_TYPE.Motor_OnOFF);
+        Observable.just(content)
+                .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(Schedulers.io())
-                .subscribe(along -> SendUtil.send(centent, TCP_CONN.channel));
-
+                .subscribe(s -> SendUtil.send(s, TCP_CONN.channel));
     }
 
     @Override
@@ -143,6 +159,8 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     }
 
     // 得到缩略图
+    @TargetApi(Build.VERSION_CODES.FROYO)
+    @RequiresApi(api = Build.VERSION_CODES.FROYO)
     public List<MapTabSpec> getAllThumbnailMaps(ThumbnailCache thumbnailCache) {
         MapTabSpec mapTabSpec = new MapTabSpec();
         String map_name = thumbnailCache.getThumbnail().getMap_name();
@@ -152,32 +170,8 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         Bitmap bitmap = BitmapFactory.decodeByteArray(decode, 0, decode.length);
         mapTabSpec.setMap(bitmap);
         mapTabSpecs.add(mapTabSpec);
-//            bitmap.recycle();
         Log.i(TAG, "getAllThumbnailMap: " + mapTabSpec.getMapName() + ", size = " + mapTabSpecs.size());
         return mapTabSpecs;
-    }
-
-    /**
-     * 抬起手指获取屏幕坐标.
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
-    public void getRelift(UpliftScreenPosition upliftScreenPosition) {
-        float eventGetRawX = upliftScreenPosition.getX();
-        float eventGetRawY = upliftScreenPosition.getY();
-        //        Log.i("抬起手指", "X= " + eventGetRawX);
-        //        Log.i("抬起手指", "Y= " + eventGetRawY);
-    }
-
-
-    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
-    public void getReconn(ReconnReason reconnReason) {
-        LaserEntity laserEntity = new LaserEntity();
-        laserEntity.getDistanceList();
-        if (reconnReason != null) {
-            String reason = reconnReason.getReason();
-//            Log.i("buildMapTest", "偏振" + "getReconn: " + reason);
-        }
-
     }
 
     /**
@@ -205,6 +199,14 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(Schedulers.io())
                 .subscribe(APPSend::sendCancel_goal);
+    }
+
+    @Override
+    public void reset() {
+        Observable.just(LoginEntity.robotMac)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())
+                .subscribe(APPSend::sendReset);
     }
 
 }

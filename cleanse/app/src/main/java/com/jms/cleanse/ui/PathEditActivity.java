@@ -4,19 +4,13 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -36,7 +30,6 @@ import com.jms.cleanse.presenter.PathEditPresenter;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.AngleWheelView;
 import com.jms.cleanse.widget.JMMapView;
-import com.jms.cleanse.widget.PointEditPopupWindow;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
@@ -47,8 +40,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import robot.boocax.com.sdkmodule.APPSend;
-import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 
 /**
  * @desc : 任务编辑
@@ -189,12 +180,12 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             public void onClick(View v) {
                 // 获取角度、停留时间、是否消毒
                 String strTime = editText.getEditableText().toString();
-                if (!TextUtils.isEmpty(strTime)){
+                if (!TextUtils.isEmpty(strTime)) {
                     long time = Long.valueOf(strTime);
-                    mapView.addPoint(cleanseable,time,angleWheelView.getCurrentAngle());
+                    mapView.addPoint(cleanseable, time, angleWheelView.getCurrentAngle());
                     editDialog.dismiss();
-                }else {
-                    Toast.makeText(PathEditActivity.this,"停留时间不可为空",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(PathEditActivity.this, "停留时间不可为空", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -227,8 +218,10 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         if (TextUtils.isEmpty(name)) {
             Toast.makeText(this, "朋友！您忘记给它命名了", Toast.LENGTH_SHORT).show();
         } else {
+            taskName = name;
             current_mode = MODE_LIST;
             dismissNamedDialog();
+            // 创建任务
             createTask(name);
             taskComplete();
             showLeftLayout();
@@ -316,14 +309,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 break;
             case R.id.btn_start_task:
                 // 执行任务
-
                 backUpToMaster(taskName);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        APPSend.sendOrder_roaming(LoginEntity.robotMac, "test", 1, "false");
-                    }
-                }).start();
                 break;
             case R.id.iv_task_delete: // 删除任务
                 // 确定选择的任务
@@ -346,7 +332,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             case R.id.btn_end:
                 showNamedDialog();
                 break;
-
         }
     }
 
@@ -398,7 +383,8 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
 
     @Override
     public void notifyAdapter(POITask newTask) {
-        taskEntities.add(newTask);
+        // taskEntities是从Poijson里面读取出来的，所以所有的引用都是指向同一个对象，故而出现了添加一次出现两次的bug
+//        taskEntities.add(newTask);
         adapter.notifyDataSetChanged();
     }
 
@@ -432,5 +418,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     public void dismissNamedDialog() {
         namedDialog.dismiss();
     }
+
 
 }

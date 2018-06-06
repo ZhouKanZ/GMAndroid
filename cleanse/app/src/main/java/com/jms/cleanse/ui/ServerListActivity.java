@@ -22,6 +22,8 @@ import butterknife.BindView;
 import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UDPList;
+import robot.boocax.com.sdkmodule.setlog.SetLog;
+import robot.boocax.com.sdkmodule.utils.logutil.LogUtils;
 
 
 /**
@@ -109,8 +111,6 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
 
     @Override
     public void jumpToRobotMaster(ServerEntity serverEntity) {
-        TCP_CONN.isUDP = true;//关闭UDP
-        TCP_CONN.loopMark = true;//开启TCP主连接
         LoginEntity.serverIP = serverEntity.getServerIp();                                                 //获取serverIP
         LoginEntity.serverName = serverEntity.getServerName();                                               //获取serverName
 

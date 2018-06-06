@@ -309,16 +309,16 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             POIPoint poiPoint = testPOIS.get(i);
             if (poiPoint.isState()) {
                 canvas.drawBitmap(cleanseRes, null, points.get(i), mPaint);
-            } else if (lastPoi != null && lastPoi.isState()) {
+            } /*else if (lastPoi != null && lastPoi.isState()) {                     // 不管上一次
                 canvas.drawBitmap(cleanseRes, null, points.get(i), mPaint);
-            } else {
+            }*/ else {
                 canvas.drawBitmap(unCleanseRes, null, points.get(i), mPaint);
             }
             lastPoi = poiPoint;
 
+            // 绘制起点和终点
             if (!isTaskEditing) {
                 double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(poiPoint.getPosition().x, poiPoint.getPosition().y, coodinateX, coodinateY);
-                /* 绘制起点和终点 */
                 if (i == 0) {
                     canvas.drawBitmap(pathStartRes, (float) (androidRobotPos[0] - pathStartRes.getWidth() / 2), (float) (androidRobotPos[1] - pathStartRes.getHeight()), mPaint);
                 } else if (i > 0 && i == testPOIS.size() - 1) {
@@ -341,14 +341,15 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
             matrix.postTranslate(-offsetX, -offsetY);
             matrix.postRotate(convertRadiansToAngle(pos.getYaw()));
-            matrix.postTranslate((float)(androidRobotPos[0]) , (float)(androidRobotPos[1]));
+            matrix.postTranslate((float) (androidRobotPos[0]), (float) (androidRobotPos[1]));
             canvas.drawBitmap(robotMap, matrix, null);
         }
 
     }
 
     /**
-     *  将弧度转换成角度
+     * 将弧度转换成角度
+     *
      * @param yaw
      * @return
      */
@@ -387,6 +388,9 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             if (i == testPOIS.size() - 1) {
                 break;
             }
+
+            // 最后一个state不处理..怎么来判断是否是最后一个点
+
             if (poiPoint.isState()) {
                 mPaint.setColor(colorCleanse);
             } else {
