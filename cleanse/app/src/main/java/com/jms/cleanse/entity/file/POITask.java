@@ -27,4 +27,23 @@ public class POITask {
     public void setPoiPoints(List<POIPoint> poiPoints) {
         this.poiPoints = poiPoints;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof POITask)) return false;
+
+        POITask poiTask = (POITask) o;
+
+        if (getName() != null ? !getName().equals(poiTask.getName()) : poiTask.getName() != null)
+            return false;
+        return getPoiPoints() != null ? getPoiPoints().equals(poiTask.getPoiPoints()) : poiTask.getPoiPoints() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (getPoiPoints() != null ? getPoiPoints().hashCode() : 0);
+        return result;
+    }
 }

@@ -28,6 +28,7 @@ import com.alexvasilkov.gestures.views.interfaces.AnimatorView;
 import com.alexvasilkov.gestures.views.interfaces.GestureView;
 import com.jms.cleanse.config.RobotConfig;
 import com.jms.cleanse.entity.file.POIPoint;
+import com.jms.cleanse.entity.file.Position;
 import com.jms.cleanse.util.DisplayUtil;
 import com.jms.cleanse.widget.mapview.POIConfig;
 import com.jms.cleanse.widget.mapview.ScaleUtils;
@@ -37,7 +38,6 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
-import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
 /**

@@ -548,6 +548,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mapTabSpecs = mPresenter.getAllThumbnailMaps(thumbnailCache);
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
             popupWindow.notifyAdapter(mapTabSpecs);
+        }else {
+
         }
 
     }
@@ -702,7 +704,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                     @Override
                     public Boolean apply(String s) throws Exception {
                         TaskExecution te = new TaskExecution(s);
-                        String teCommandStr = appendCustomCommand(te, LoginEntity.robotMac, MSG_TYPE.Disinfect_Task_Exec);
+                        String teCommandStr = appendCustomCommand(te, LoginEntity.robotMac, MSG_TYPE.disinfection_task_exec);
                         boolean flag = SendUtil.send(teCommandStr, TCP_CONN.channel);
                         return flag;
                     }

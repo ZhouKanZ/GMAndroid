@@ -14,10 +14,10 @@ interface RosCommand
 
 enum class MSG_TYPE(val s: String) {
 
-    Motor_OnOFF("motor_onoff"),
-    Disinfect_Task_Exec("disinfect_task_exec"),
-    Scheduled_Task_Exec("scheduled_task_exec"),
-    Scheduled_Task_Cancel("scheduled_task_cancel")
+    motor_onoff("motor_onoff"),
+    disinfection_task_exec("disinfection_task_exec"),
+    scheduled_task_exec("scheduled_task_exec"),
+    scheduled_task_cancel("scheduled_task_cancel")
 
 }
 

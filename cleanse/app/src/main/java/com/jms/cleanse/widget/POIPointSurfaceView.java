@@ -14,7 +14,7 @@ import android.view.SurfaceView;
  * @desc: 绘制poi点
  */
 
-public class POIPoint extends SurfaceView implements SurfaceHolder.Callback, Runnable {
+public class POIPointSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
 
     private boolean isRunning = false;
     private Paint mPaint;
@@ -23,15 +23,15 @@ public class POIPoint extends SurfaceView implements SurfaceHolder.Callback, Run
     private Thread t;
 
 
-    public POIPoint(Context context) {
+    public POIPointSurfaceView(Context context) {
         this(context, null);
     }
 
-    public POIPoint(Context context, AttributeSet attrs) {
+    public POIPointSurfaceView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public POIPoint(Context context, AttributeSet attrs, int defStyleAttr) {
+    public POIPointSurfaceView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }

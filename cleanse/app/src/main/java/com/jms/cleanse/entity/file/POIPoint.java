@@ -1,6 +1,5 @@
 package com.jms.cleanse.entity.file;
 
-import robot.boocax.com.sdkmodule.entity.entity_file.poi.sdk.Position;
 
 /**
  * Created by WangJun on 2018/4/13.
@@ -33,9 +32,34 @@ public class POIPoint {
         return position;
     }
 
-    public void setPosition(Position position) {this.position = position;}
 
     public long getTime() {return time;}
 
     public void setTime(long time) {this.time = time;}
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof POIPoint)) return false;
+
+        POIPoint poiPoint = (POIPoint) o;
+
+        if (isState() != poiPoint.isState()) return false;
+        if (getName() != null ? !getName().equals(poiPoint.getName()) : poiPoint.getName() != null)
+            return false;
+        return getPosition() != null ? getPosition().equals(poiPoint.getPosition()) : poiPoint.getPosition() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (isState() ? 1 : 0);
+        result = 31 * result + (getPosition() != null ? getPosition().hashCode() : 0);
+        return result;
+    }
+
 }
