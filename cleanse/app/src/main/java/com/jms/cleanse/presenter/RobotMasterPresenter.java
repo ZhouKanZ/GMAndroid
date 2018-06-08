@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -73,19 +74,20 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     }
 
     public void initData() {
-        mapTabSpecs = new ArrayList<>();
 
+        mapTabSpecs = new ArrayList<>();
     }
 
     @Override
     public void doLoopSendMove() {
+
         // 间隔100ms发一次指令
         loopDispose = Observable
                 .interval(200, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(along ->
-                                APPSend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2]), e -> Log.d(TAG, "doLoopSendMove: " + e.fillInStackTrace().toString())
+                        APPSend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2]), e -> Log.d(TAG, "doLoopSendMove: " + e.toString())
                 );
 
     }
@@ -143,7 +145,14 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
 
     @Override
     public void requestAllMapInfo() {
-        new Thread(APPSend::sendGetAllMap).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                APPSend.sendGetAllMap();
+                APPSend.sendGetAllFile();
+            }
+        }).start();
+
     }
 
     /**
@@ -187,7 +196,6 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
             if (!TextUtils.isEmpty(mapName)) {
                 getView().showLoadMap(mapName);
             }
-
         }
     }
 

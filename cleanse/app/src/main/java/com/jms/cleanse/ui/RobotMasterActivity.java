@@ -19,6 +19,7 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.jms.cleanse.R;
@@ -52,17 +53,21 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.Map_param;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.TempMapBytes;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Loc_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Move_status;
@@ -184,7 +189,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    @OnClick({R.id.ib_task_list, R.id.ib_map_list, R.id.iv_urgent, R.id.reset,R.id.ib_plan_list, R.id.ib_recorder_list})
+    @OnClick({R.id.ib_task_list, R.id.ib_map_list, R.id.iv_urgent, R.id.reset, R.id.ib_plan_list, R.id.ib_recorder_list})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.ib_task_list:
@@ -212,7 +217,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 break;
             case R.id.ib_recorder_list:
                 // 跳转至日志页面
-                startActivity(new Intent(RobotMasterActivity.this,TaskRecorderActivity.class));
+                startActivity(new Intent(RobotMasterActivity.this, TaskRecorderActivity.class));
                 break;
         }
     }
@@ -469,7 +474,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     public void getAllMapInfo(All_map_info allMapInfo) {
 
         Gson gson = new Gson();
-        Log.i(TAG, "getAllMapInfo: " + allMapInfo.getAll_map_info().size());
+        Log.i(TAG, "getAllMapInfo: " + allMapInfo.getAll_map_info().toString());
+
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
             return;
         }
@@ -481,6 +487,15 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             for (String mapName : allMapInfo.getAll_map_info()) {
                 mPresenter.notifyAskNewBitmap(mapName);
             }
+        }
+    }
+
+    // 所有地图的信息
+    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
+    public void getMapinfo(Map_param map_param) {
+        if (null != map_param) {
+            All_file_info.MapInfoBean bean = map_param.getMapParam();
+            RobotConfig.current_uuid = bean.getUuid();
         }
     }
 
@@ -533,10 +548,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mapTabSpecs = mPresenter.getAllThumbnailMaps(thumbnailCache);
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
             popupWindow.notifyAdapter(mapTabSpecs);
-
-
         }
-
 
     }
 
@@ -661,9 +673,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
      */
     private void queryTask(String taskName) {
         Log.d(TAG, "queryTask: " + taskName);
-
         setCurrentTaskName(taskName);
-
         POIJson poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
         for (POITask task : poiJson.getTasks()) {
             if (taskName.equals(task.getName())) {
@@ -671,7 +681,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 return;
             }
         }
-
     }
 
     /**
@@ -689,12 +698,20 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
      */
     private void executeTask(String taskName) {
         Observable.just(taskName)
-                .observeOn(Schedulers.io())
-                .subscribe(s -> {
-                    TaskExecution te = new TaskExecution(s);
-                    String teCommandStr = appendCustomCommand(te, LoginEntity.robotMac, MSG_TYPE.Scheduled_Task_Exec);
-                    SendUtil.send(teCommandStr, TCP_CONN.channel);
-                }, e -> e.fillInStackTrace());
+                .map(new Function<String, Boolean>() {
+                    @Override
+                    public Boolean apply(String s) throws Exception {
+                        TaskExecution te = new TaskExecution(s);
+                        String teCommandStr = appendCustomCommand(te, LoginEntity.robotMac, MSG_TYPE.Disinfect_Task_Exec);
+                        boolean flag = SendUtil.send(teCommandStr, TCP_CONN.channel);
+                        return flag;
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(s ->
+                                Toast.makeText(RobotMasterActivity.this, s ? "数据成功发送" : "网络故障请稍后重试", Toast.LENGTH_SHORT).show()
+                        , e -> e.fillInStackTrace());
 
     }
 
@@ -749,8 +766,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
 
     private void dismissTaskName() {
-//        lineTaskDiv.setVisibility(View.GONE);
-//        tvCurrentTask.setVisibility(View.GONE);
+
     }
 
 
@@ -767,13 +783,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private void showRockerView() {
         rockerview.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // TODO: add setContentView(...) invocation
-        ButterKnife.bind(this);
     }
 
 }

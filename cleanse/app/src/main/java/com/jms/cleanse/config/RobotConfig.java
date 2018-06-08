@@ -17,5 +17,7 @@ public class RobotConfig {
     // 地图的比例尺  0.05m/piex
     public static double MAP_SCALE = 0.05D;
 
+    public static String current_uuid = "";
+
 
 }

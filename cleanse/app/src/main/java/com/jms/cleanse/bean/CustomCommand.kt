@@ -2,6 +2,7 @@ package com.jms.cleanse.bean
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.jms.cleanse.config.RobotConfig
 
 /**
  * Created by zhoukan on 2018/5/17.
@@ -14,7 +15,7 @@ interface RosCommand
 enum class MSG_TYPE(val s: String) {
 
     Motor_OnOFF("motor_onoff"),
-    TASK_EXEC("task_exec"),
+    Disinfect_Task_Exec("disinfect_task_exec"),
     Scheduled_Task_Exec("scheduled_task_exec"),
     Scheduled_Task_Cancel("scheduled_task_cancel")
 
@@ -23,7 +24,7 @@ enum class MSG_TYPE(val s: String) {
 /**
  *  统一的命令
  */
-data class CustomCommand(val msg_type: MSG_TYPE, val rosCommand: RosCommand)
+data class CustomCommand(val msg_type: MSG_TYPE, val rosCommand: RosCommand,val uuid:String = RobotConfig.current_uuid)
 
 /**
  * 上位机状态
