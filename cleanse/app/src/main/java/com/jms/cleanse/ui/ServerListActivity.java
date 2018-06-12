@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.jms.cleanse.R;
+import com.jms.cleanse.adapter.OnItemClickListener;
+import com.jms.cleanse.adapter.ServerInfoAdapter;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.contract.ServerListContract;
 import com.jms.cleanse.entity.robot.ServerEntity;
@@ -32,7 +34,7 @@ import robot.boocax.com.sdkmodule.utils.logutil.LogUtils;
  * @desc: 服务器列表 做初始化初始化工作 ， 并监听udp广播
  */
 
-public class ServerListActivity extends BaseActivity<ServerListPresenter> implements ServerListContract.ServerListView {
+public class ServerListActivity extends BaseActivity<ServerListPresenter> implements ServerListContract.ServerListView, OnItemClickListener<ServerEntity> {
 
 
     private static final String TAG = "ServerListActivity";
@@ -41,14 +43,12 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
     RecyclerView serverInfoRv;
 
     List<ServerEntity> serverEntities;
-    RecyclerView.Adapter adapter;
-
+    ServerInfoAdapter adapter;
 
     @Override
     protected ServerListPresenter loadPresenter() {
         return new ServerListPresenter(this);
     }
-
 
     @Override
     protected int getLayoutId() {
@@ -58,22 +58,8 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
     @Override
     protected void initData() {
         serverEntities = new ArrayList<>();
-        adapter = new CommonAdapter<ServerEntity>(this, R.layout.item_server_info, serverEntities) {
-
-            @Override
-            protected void convert(ViewHolder holder, final ServerEntity serverEntity, int position) {
-                holder.setText(R.id.tv_server_ip, serverEntity.getServerIp());
-                holder.setText(R.id.tv_server_name, serverEntity.getServerName());
-
-
-                holder.setOnClickListener(R.id.layout_server_info, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        jumpToRobotMaster(serverEntity);
-                    }
-                });
-            }
-        };
+        adapter = new ServerInfoAdapter(serverEntities, this);
+        adapter.setOnItemClickListener(this);
         mPresenter.initData();
     }
 
@@ -111,9 +97,9 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
 
     @Override
     public void jumpToRobotMaster(ServerEntity serverEntity) {
+
         LoginEntity.serverIP = serverEntity.getServerIp();                                                 //获取serverIP
         LoginEntity.serverName = serverEntity.getServerName();                                               //获取serverName
-
         String isLock;
         isLock = serverEntity.getLock();//获取是否加锁
 
@@ -143,5 +129,10 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
             }
         }
         return a;
+    }
+
+    @Override
+    public void OnItemClick(ServerEntity serverEntity, int position) {
+        jumpToRobotMaster(serverEntity);
     }
 }

@@ -9,16 +9,14 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.jms.cleanse.base.BasePresenter;
 import com.jms.cleanse.bean.MSG_TYPE;
 import com.jms.cleanse.bean.MotorOnOff;
 import com.jms.cleanse.contract.RobotMasterContract;
 import com.jms.cleanse.entity.map.MapTabSpec;
-import com.jms.cleanse.entity.robot.LaserEntity;
+import com.jms.cleanse.presenter.status.RunContext;
 import com.jms.cleanse.util.FileUtil;
+import com.jms.cleanse.presenter.status.RunTimeState;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -29,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -38,11 +35,9 @@ import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.Map_param;
-import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
-import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UpliftScreenPosition;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
-import robot.boocax.com.sdkmodule.utils.sdk_utils.GsonUtil;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Register_status;
 import robot.boocax.com.sdkmodule.utils.sdk_utils.SendUtil;
 
 import static com.jms.cleanse.bean.CustomCommandKt.appendCustomCommand;
@@ -52,13 +47,13 @@ import static com.jms.cleanse.bean.CustomCommandKt.appendCustomCommand;
  *
  * @desc:
  */
-
 public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View> implements RobotMasterContract.Presenter {
 
     private static final String TAG = "RobotMasterPresenter";
     private Disposable loopDispose;
     private Disposable commadnDispose;
     private MotorOnOff motorOnOff = new MotorOnOff("off");
+    private RunContext runContext = new RunContext();
 
 
     private List<MapTabSpec> mapTabSpecs;
@@ -76,6 +71,8 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     public void initData() {
 
         mapTabSpecs = new ArrayList<>();
+        // 默认为手动模式
+        runContext.setState(RunContext.MANUALLY_STATE);
     }
 
     @Override
@@ -198,6 +195,23 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     }
 
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getRegister_status(Register_status register_status) {
+        if (register_status == null) {
+            return;
+        }
+
+        Log.d(TAG, "getRegister_status: " + register_status.getAuth_result());
+
+        if (register_status.getAuth_result().equals("true")) {
+
+        } else if (register_status.getAuth_result().equals("false")) {
+
+        }
+
+    }
+
+
     @Override
     public void cancelGoal() {
         // 发送取消导航的命令
@@ -213,6 +227,16 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(Schedulers.io())
                 .subscribe(APPSend::sendReset);
+    }
+
+    @Override
+    public void switchWithIndex(int i) {
+        runContext.switchWithIndex(i);
+    }
+
+    @Override
+    public void switchMotorState(boolean flag) {
+        runContext.switchMotorState(flag);
     }
 
 }

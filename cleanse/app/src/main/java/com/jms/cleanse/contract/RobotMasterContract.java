@@ -17,7 +17,6 @@ public class RobotMasterContract {
          */
         double[] getSpeed();
 
-
         void showLoadMap(String mapName);
 
         // 设置当前地图的名称 -- 在子线程中
@@ -53,6 +52,18 @@ public class RobotMasterContract {
          * 重定位
          */
         void reset();
+
+        /**
+         *  根据位置切换标签
+         * @param i
+         */
+        void switchWithIndex(int i);
+
+        /**
+         * 切换上位机状态
+         * @param flag
+         */
+        void switchMotorState(boolean flag);
     }
 
 }

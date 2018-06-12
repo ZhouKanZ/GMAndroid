@@ -56,6 +56,13 @@ data class PointCompletion(var pointName:String,var img:String,var cleased:Boole
  */
 data class TaskRecoder(var taskName:String,var startTime:String,var endTime:String,var taskPointState:ArrayList<PointCompletion>?)
 
+
+/*{feedback: {mode: 1, name: t1}, msg_type: disinfection_task_exec}*/
+
+data class FeedBack(val mode:Int,val name:String)
+
+data class Task(var msg_type:String,val feedback:FeedBack)
+
 /**
  *  拼接自定义的命令
  */

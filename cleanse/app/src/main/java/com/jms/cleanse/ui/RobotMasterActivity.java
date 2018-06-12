@@ -64,6 +64,7 @@ import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.Map_param;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.OtherJson;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ReconnReason;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.TempMapBytes;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
@@ -84,6 +85,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private static final String TAG = "RobotMasterActivity";
     private static final int REQUEST_CODE = 0X01;
+
     @BindView(R.id.tv_loc)
     TextView tvLoc;
     @BindView(R.id.tv_task)
@@ -124,13 +126,10 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private All_map_info allMapInfo;
     private List<MapTabSpec> mapTabSpecs;
-    private ProgressDialog progressBar;
     private boolean isChecked = false;
     private double[] speed = new double[3];
-    private List<TestPOI> testPOIS;
-    private int size = -1; // 任务点的长度
+    private int size = -1;     // 任务点的长度
     private int goneTimes = 0; //到达的次数
-    private int currentNaviStatus;
 
     @Override
     protected RobotMasterPresenter loadPresenter() {
@@ -144,11 +143,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     @Override
     protected void initData() {
-
         mPresenter.initData();
         mapTabSpecs = new ArrayList<>();
         popupWindow = new MapSelectPopupWindow(this);
-        progressBar = new ProgressDialog(this);
     }
 
     @Override
@@ -181,7 +178,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
             }
         });
     }
-
 
     @Override
     protected void onDestroy() {
@@ -242,6 +238,31 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         animation
                 .setDuration(500)
                 .start();
+    }
+
+    /**
+     * map图片byte[]
+     */
+    @Subscribe(threadMode = ThreadMode.POSTING, sticky = true)
+    public void getMapBytes(final TempMapBytes tempMapBytes) {
+        Log.i(TAG, "getMapBytes: ");
+        if (tempMapBytes != null) {
+            byte[] bytes = tempMapBytes.getBytes();
+            Observable.just(BitmapFactory.decodeByteArray(bytes, 0, bytes.length))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<Bitmap>() {
+                        @Override
+                        public void accept(Bitmap bitmap) throws Exception {
+                            mapView.setMap(bitmap);
+                        }
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable throwable) throws Exception {
+                            Log.i(TAG, "apply map error " + throwable.getMessage());
+                        }
+                    });
+        }
     }
 
     /**
@@ -319,7 +340,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     public void getMoveStatus(Move_status move_status) {
         if (null != move_status) {
             Log.d(TAG, "getMoveStatus: " + move_status.getMove_status());
-            currentNaviStatus = move_status.getMove_status();
             switch (move_status.getMove_status()) {
                 case 0:// 静止待命
                     tvLoc.setTextColor(getResources().getColor(R.color.info));
@@ -395,70 +415,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         }
     }
 
-    @Override
-    public void onStarting() {
-        mPresenter.doLoopSendMove();
-    }
-
-    /**
-     * @param angle  角度[0,360)
-     * @param length [0,R-r]
-     */
-    @Override
-    public void change(double angle, float length) {
-
-        DecimalFormat df = new DecimalFormat("#0.000");
-
-        // 机器人的线速度 vx
-        speed[0] = Double.valueOf(df.format(-Math.sin(convertAngleToRadians(angle)) * length * RobotConfig.MAX_VEL));
-        // vy 没有意义 设置为0
-        speed[1] = 0;
-        // 机器人的角速度
-        speed[2] = Double.valueOf(df.format(-Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED));
-
-
-    }
-
-    @Override
-    public void onFinish() {
-
-        for (int i = 0; i <= 3; i++) {
-            Observable.just(speed)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .subscribe(s ->
-                            APPSend.sendMove(LoginEntity.robotMac, 0, 0, 0), e -> {
-                    });
-        }
-
-        mPresenter.cancelLoop();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        EventBus.getDefault().register(this);
-        loadMap();
-        Log.d(TAG, "onResume: ");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        EventBus.getDefault().unregister(this);
-        Log.d(TAG, "onPause: ");
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.d(TAG, "onRestart: ");
-    }
-
-
-    private void loadMap() {
-        mapView.setMap(mPresenter.loadMapPng());
-    }
 
     // 充电状态
     @Subscribe(threadMode = ThreadMode.POSTING)
@@ -548,21 +504,16 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mapTabSpecs = mPresenter.getAllThumbnailMaps(thumbnailCache);
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
             popupWindow.notifyAdapter(mapTabSpecs);
-        }else {
+        } else {
 
         }
 
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void getReport(Move_status move_status) {
-        Log.d(TAG, "getReport: " + move_status.getMove_status());
-    }
-
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void getOBD(OBD obd) {
 
-        if (obd == null) {
+        if (obd == null || obd.getObd() == null) {
             return;
         }
 
@@ -588,6 +539,14 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 });
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void getOtherJson(OtherJson otherJson) {
+        if (null != otherJson) {
+            String str = otherJson.getOtherJson();
+            Log.d(TAG, "getOtherJson: " + str);
+        }
+    }
+
     @Override
     public double[] getSpeed() {
         return speed;
@@ -595,7 +554,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     @Override
     public void showLoadMap(String mapName) {
-
     }
 
     @Override
@@ -617,37 +575,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         return angle * (2 * (Math.PI / 360));
     }
 
-    /**
-     * map图片byte[]
-     */
-    @Subscribe(threadMode = ThreadMode.POSTING, sticky = true)
-    public void getMapBytes(final TempMapBytes tempMapBytes) {
-        Log.i(TAG, "getMapBytes: ");
-        if (tempMapBytes != null) {
-            byte[] bytes = tempMapBytes.getBytes();
-            Observable.just(BitmapFactory.decodeByteArray(bytes, 0, bytes.length))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Consumer<Bitmap>() {
-                        @Override
-                        public void accept(Bitmap bitmap) throws Exception {
-                            mapView.setMap(bitmap);
-                        }
-                    }, new Consumer<Throwable>() {
-                        @Override
-                        public void accept(Throwable throwable) throws Exception {
-                            Log.i(TAG, "apply map error " + throwable.getMessage());
-                        }
-                    });
-        }
-    }
-
-
-    @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
-    public void getConnectState(ReconnReason reason) {
-        Log.i(TAG, "getConnectState: " + reason.getReason());
-        // 网络连接状况
-    }
 
     /**
      * 接收返回的数据
@@ -766,12 +693,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         enableSilder(false);
     }
 
-
-    private void dismissTaskName() {
-
-    }
-
-
     /**
      * 清空路径
      */
@@ -785,6 +706,70 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private void showRockerView() {
         rockerview.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onStarting() {
+        mPresenter.doLoopSendMove();
+    }
+
+    /**
+     * @param angle  角度[0,360)
+     * @param length [0,R-r]
+     */
+    @Override
+    public void change(double angle, float length) {
+
+        DecimalFormat df = new DecimalFormat("#0.000");
+
+        // 机器人的线速度 vx
+        speed[0] = Double.valueOf(df.format(-Math.sin(convertAngleToRadians(angle)) * length * RobotConfig.MAX_VEL));
+        // vy 没有意义 设置为0
+        speed[1] = 0;
+        // 机器人的角速度
+        speed[2] = Double.valueOf(df.format(-Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED));
+
+
+    }
+
+    @Override
+    public void onFinish() {
+
+        for (int i = 0; i <= 3; i++) {
+            Observable.just(speed)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .subscribe(s ->
+                            APPSend.sendMove(LoginEntity.robotMac, 0, 0, 0), e -> {
+                    });
+        }
+
+        mPresenter.cancelLoop();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+        loadMap();
+        Log.d(TAG, "onResume: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        EventBus.getDefault().unregister(this);
+        Log.d(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(TAG, "onRestart: ");
+    }
+
+    private void loadMap() {
+        mapView.setMap(mPresenter.loadMapPng());
     }
 
 }

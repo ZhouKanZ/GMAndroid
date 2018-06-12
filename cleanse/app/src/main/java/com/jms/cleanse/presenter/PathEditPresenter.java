@@ -117,15 +117,15 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
 
         switch (tag) {
             case FileUtil.ADD:
-                poiJson.getPoi_info().addAll(poiList);
+//                poiJson.getPoi_info().addAll(poiList);
                 poiJson.getGroups().put(poiTask.getName(), group);
                 poiJson.getTasks().add(poiTask);
                 break;
             case FileUtil.DELETE:
 
-                for (CustomPOI customPOI : poiList) { // 同一对象才可以删除
-                    poiJson.getPoi_info().remove(customPOI);
-                }
+//                for (CustomPOI customPOI : poiList) { // 同一对象才可以删除
+//                    poiJson.getPoi_info().remove(customPOI);
+//                }
                 poiJson.getGroups().remove(poiTask.getName());
                 poiJson.getTasks().remove(poiTask);
 
@@ -154,8 +154,6 @@ public class PathEditPresenter extends BasePresenter<PathEditContract.View> impl
     public List<POITask> loadData() {
 
         poiJson = FileUtil.readFileJM(FileUtil.POI_JSON);
-        Map<String, List<String>> groups = poiJson.getGroups();
-        List<CustomPOI> poi_info = poiJson.getPoi_info();
         List<POITask> poiTasks = poiJson.getTasks();
 
         return poiTasks;

@@ -1,11 +1,13 @@
 package com.jms.cleanse.adapter;
 
 import android.content.Context;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.jms.cleanse.R;
@@ -22,12 +24,10 @@ import butterknife.ButterKnife;
  * @desc: 服务列表的adapter
  */
 
-public class ServerInfoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class ServerInfoAdapter extends BaseAdapter<ServerEntity> {
 
     public static int NORMOL_TYPE = 0X01;  // 正常的
     public static int WATTING_TYPE = 0X02; // 无数据
-
-
     private List<ServerEntity> serverEntities;
     private Context ctz;
     private LayoutInflater inflater;
@@ -56,21 +56,40 @@ public class ServerInfoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (getItemViewType(position) == WATTING_TYPE) {
-//            Glide.with(this)
-//                    .load(R.drawable)
+            OnbindNodataViewHolder((NoDataViewHolder) holder, position);
         } else {
-
+            OnbindViewHolder((ViewHolder) holder, position);
         }
+    }
+
+    private void OnbindViewHolder(ViewHolder holder, int position) {
+        ServerEntity se = serverEntities.get(position);
+        holder.tvServerIp.setText(se.getServerIp());
+        holder.tvServerName.setText(se.getServerName());
+        holder.layoutServerInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onItemClickListener != null){
+                    onItemClickListener.OnItemClick(se,position);
+                }
+            }
+        });
+    }
+
+    private void OnbindNodataViewHolder(NoDataViewHolder holder, int position) {
+        Glide.with(ctz)
+                .load(R.drawable.waitudp)
+                .into(holder.ivGif);
     }
 
     @Override
     public int getItemCount() {
-        return serverEntities.size();
+        return serverEntities.size() == 0 ?1:serverEntities.size();
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (getItemCount() == 0) {
+        if (getItemCount() == 1 && serverEntities.size() == 0) {
             return WATTING_TYPE;
         }
         return NORMOL_TYPE;
@@ -89,9 +108,16 @@ public class ServerInfoAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
+        @BindView(R.id.tv_server_name)
+        TextView tvServerName;
+        @BindView(R.id.tv_server_ip)
+        TextView tvServerIp;
+        @BindView(R.id.layout_server_info)
+        CardView layoutServerInfo;
 
         public ViewHolder(View itemView) {
             super(itemView);
+            ButterKnife.bind(this, itemView);
         }
     }
 
