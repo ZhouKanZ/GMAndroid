@@ -73,6 +73,15 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
         mapTabSpecs = new ArrayList<>();
         // 默认为手动模式
         runContext.setState(RunContext.MANUALLY_STATE);
+        // 发送获取App map.json指令
+        String getMapJson = "{\"message_type\":\"get_file\",\"file_name\":\"map.json\"}";
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                SendUtil.send(getMapJson,TCP_CONN.channel);
+            }
+        }).start();
+
     }
 
     @Override

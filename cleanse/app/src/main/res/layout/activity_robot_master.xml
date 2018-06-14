@@ -127,6 +127,16 @@
         android:layout_marginLeft="22dp"
         />
 
+    <ImageView
+        android:id="@+id/cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/cancelgoal"
+        android:layout_marginLeft="22dp"
+        android:layout_above="@+id/reset"
+        android:layout_marginBottom="10dp"
+        />
+
 
 
 </RelativeLayout>

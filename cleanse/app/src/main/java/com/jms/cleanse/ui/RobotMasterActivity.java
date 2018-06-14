@@ -1,7 +1,6 @@
 package com.jms.cleanse.ui;
 
 import android.animation.ObjectAnimator;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -38,7 +37,6 @@ import com.jms.cleanse.widget.BatteryBar;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.MapSelectPopupWindow;
 import com.jms.cleanse.widget.RockerView;
-import com.jms.cleanse.widget.mapview.TestPOI;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -53,7 +51,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
@@ -85,6 +82,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private static final String TAG = "RobotMasterActivity";
     private static final int REQUEST_CODE = 0X01;
+
 
     @BindView(R.id.tv_loc)
     TextView tvLoc;
@@ -123,6 +121,8 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     ImageView ibPlanList;
     @BindView(R.id.ib_recorder_list)
     ImageView ibRecorderList;
+    @BindView(R.id.cancel)
+    ImageView cancel;
 
     private All_map_info allMapInfo;
     private List<MapTabSpec> mapTabSpecs;
@@ -130,6 +130,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     private double[] speed = new double[3];
     private int size = -1;     // 任务点的长度
     private int goneTimes = 0; //到达的次数
+    private int state = 1; // 0 1 present the state of control 0:auto 1:manu
 
     @Override
     protected RobotMasterPresenter loadPresenter() {
@@ -185,40 +186,69 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    @OnClick({R.id.ib_task_list, R.id.ib_map_list, R.id.iv_urgent, R.id.reset, R.id.ib_plan_list, R.id.ib_recorder_list})
+    @OnClick({R.id.ib_task_list, R.id.ib_map_list, R.id.iv_urgent, R.id.reset, R.id.ib_plan_list, R.id.ib_recorder_list,R.id.cancel})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.ib_task_list:
                 // START ACTIVITY FOR RESULT ....
-                startActivityForResult(new Intent(RobotMasterActivity.this, PathEditActivity.class), REQUEST_CODE);
+                if (stateJudge() == 1) {
+                    startActivityForResult(new Intent(RobotMasterActivity.this, PathEditActivity.class), REQUEST_CODE);
+                }
                 break;
             case R.id.ib_map_list:
                 // 唤起popwindow
-                mPresenter.showMapList();
-                popupWindow.showAtLocation(layoutRobotMaster, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
-                // 隐藏sliderLayout
-                layoutRightSider.setVisibility(View.GONE);
-                popupWindow.notifyAdapter(mapTabSpecs);
+                if (stateJudge() == 1) {
+                    mPresenter.showMapList();
+                    popupWindow.showAtLocation(layoutRobotMaster, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
+                    // 隐藏sliderLayout
+                    layoutRightSider.setVisibility(View.GONE);
+                    popupWindow.notifyAdapter(mapTabSpecs);
+                }
+
                 break;
             case R.id.iv_urgent:
-                taskFinished();
+                    taskFinished();
                 break;
             case R.id.reset:
-                // 触发旋转一周的动作
-                startAnim();
-                mPresenter.reset();
+
+                if (stateJudge() == 1) {
+                    // 触发旋转一周的动作
+                    startAnim();
+                    mPresenter.reset();
+                }
+
                 break;
             case R.id.ib_plan_list:
 
                 break;
             case R.id.ib_recorder_list:
-                // 跳转至日志页面
-                startActivity(new Intent(RobotMasterActivity.this, TaskRecorderActivity.class));
+
+                if (stateJudge() == 1) {
+                    // 跳转至日志页面
+                    startActivity(new Intent(RobotMasterActivity.this, TaskRecorderActivity.class));
+                }
+
+            case R.id.cancel:
+
+//              if (stateJudge() == 1) {
+//                    // 跳转至日志页面
+                mPresenter.cancelGoal();
+                state = 1;
+//               }
                 break;
         }
     }
 
+    private int stateJudge() {
+        if (state == 0) {
+            Toast.makeText(RobotMasterActivity.this, "operation is not allowed on current mode !", Toast.LENGTH_SHORT).show();
+        }
+        return state;
+    }
+
     private void taskFinished() {
+
+        state = 1;
         goneTimes = 0;
         size = -1;
         mPresenter.cancelGoal();
@@ -361,6 +391,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                         enableSilder(true);
                         goneTimes = 0;
                         size = -1;
+                        state = 1;
                     }
                     tvLoc.setTextColor(getResources().getColor(R.color.info));
                     tvLoc.setText("导航完成");
@@ -626,6 +657,10 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
      * 执行任务
      */
     private void executeTask(String taskName) {
+
+        // convert state to auto mode
+        state = 0;
+
         Observable.just(taskName)
                 .map(new Function<String, Boolean>() {
                     @Override
