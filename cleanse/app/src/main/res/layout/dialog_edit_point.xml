@@ -53,7 +53,7 @@
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteY="0dp" />
 
-    <TextView
+   <!-- <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -76,7 +76,7 @@
         android:layout_marginTop="13dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/angleWheelView"
-        tools:ignore="MissingConstraints" />
+        tools:ignore="MissingConstraints" />-->
 
     <EditText
         android:id="@+id/editText"
@@ -97,6 +97,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/angleWheelView"
         app:layout_constraintVertical_bias="0.923"
+        android:text="0"
         tools:ignore="MissingConstraints" />
 
     <Button

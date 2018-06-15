@@ -84,7 +84,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
     Button btnSure;
     Button btnCancel;
     AngleWheelView angleWheelView;
-    Switch isCleanse;
+//    Switch isCleanse;
     EditText editText;
     Button btn;
     ImageView imageView;
@@ -148,7 +148,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         btnCancel = namedDialog.findViewById(R.id.btn_cancel);
 
         angleWheelView = editDialog.findViewById(R.id.angleWheelView);
-        isCleanse = editDialog.findViewById(R.id.switch1);
+//        isCleanse = editDialog.findViewById(R.id.switch1);
         editText = editDialog.findViewById(R.id.editText);
         btn = editDialog.findViewById(R.id.button);
         imageView = editDialog.findViewById(R.id.imageView);
@@ -168,12 +168,12 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             }
         });
 
-        isCleanse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                cleanseable = isChecked;
-            }
-        });
+//        isCleanse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                cleanseable = isChecked;
+//            }
+//        });
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
