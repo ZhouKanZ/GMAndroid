@@ -47,12 +47,15 @@ dependencies {
     kapt 'com.jakewharton:butterknife-compiler:8.8.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0'
     testImplementation 'junit:junit:4.12'
-    compile 'com.zhy:base-rvadapter:3.0.3'
-    compile 'com.trello.rxlifecycle2:rxlifecycle-components:2.2.1'
-    compile 'org.greenrobot:eventbus:3.0.0'
-    compile 'com.google.code.gson:gson:2.2.4'
-    compile 'com.github.bumptech.glide:glide:4.0.0'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.zhy:base-rvadapter:3.0.3'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-components:2.2.1'
+    implementation 'org.greenrobot:eventbus:3.0.0'
+    implementation 'com.google.code.gson:gson:2.2.4'
+    implementation 'com.github.bumptech.glide:glide:4.0.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    // https://mvnrepository.com/artifact/io.netty/netty-all
+    implementation 'io.netty:netty-all:4.1.25.Final'
+
 
     compile(name:'sdkmodule-debug',ext:'aar'){
         exclude group: 'com.google.code.gson', module: 'gson'
