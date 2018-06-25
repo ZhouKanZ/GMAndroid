@@ -56,8 +56,7 @@ public class LoginActivity extends BaseActivity {
     }
 
     @Override
-    protected void initListeners() {
-    }
+    protected void initListeners() {}
 
     @OnClick(R.id.btn_login)
     public void onViewClicked() {

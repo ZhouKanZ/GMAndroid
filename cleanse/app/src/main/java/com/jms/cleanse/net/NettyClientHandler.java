@@ -1,12 +1,9 @@
 package com.jms.cleanse.net;
 
-import com.jms.cleanse.util.DataFormUtil;
-
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 
 public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     private NettyClient nettyClient = null;
@@ -36,32 +33,20 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-//        Log.d("NettyClientHandl", "registered");
         super.channelRegistered(ctx);
     }
 
+    /**
+     *   on active method : send register message !
+     * @param ctx
+     * @throws Exception
+     */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
 
-        System.out.println("active invoked");
-
-        String msg = "{ \"message_type\":\"register_client\",\"client_type\":2,\"mac_address\":\"00:0c:29:e1:d7:c1\"}";
-        byte[] src = msg.getBytes();
-        int len = src.length;
-        byte[] bytes = DataFormUtil.intToBytes(len);
-        byte[] output = DataFormUtil.unitByteArray(bytes,src);
         ByteBuf byteBuf = ctx.alloc().buffer();
-        byteBuf.writeBytes(output);
-
-        ChannelFuture f= ctx.writeAndFlush(byteBuf);
-        f.addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-
-            }
-        });
-
-
+        byteBuf.writeBytes(SendHelper.sendStr("{ \"message_type\":\"register_client\",\"client_type\":3,\"mac_address\":"+LoginEntity.robotMac+"}"));
+        ctx.writeAndFlush(byteBuf);
     }
 
     @Override
@@ -71,7 +56,6 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-//        Log.d("NettyClientHandl", "网络异常!");
         super.exceptionCaught(ctx, cause);
         ctx.close();
     }

@@ -48,15 +48,6 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 
 public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Runnable, GestureView, AnimatorView {
 
-    /**
-     * MAPVIEW的模式
-     */
-    public enum Mode {
-        EDIT, // 编辑模式
-        EXE,  // 执行模式
-        FREE  // 自由模式
-    }
-
     private static final String TAG = "JMMapView";
 
     private final GestureController controller;                   // 手势控制
@@ -334,7 +325,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         if (pos != null) {
             double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(pos.getX(), pos.getY(), coodinateX, coodinateY);
 //            canvas.drawBitmap(robotMap, (float) (androidRobotPos[0] - (robotMap.getWidth() / 2)), (float) (androidRobotPos[1] - (robotMap.getHeight() / 2)), mPaint);
-            Log.d(TAG, "drawRobot: " + pos.getYaw());
+//            Log.d(TAG, "drawRobot: " + pos.getYaw());
             Matrix matrix = new Matrix();
             int offsetX = robotMap.getWidth() / 2;
             int offsetY = robotMap.getHeight() / 2;

@@ -12,6 +12,7 @@ import com.jms.cleanse.adapter.ServerInfoAdapter;
 import com.jms.cleanse.base.BaseActivity;
 import com.jms.cleanse.contract.ServerListContract;
 import com.jms.cleanse.entity.robot.ServerEntity;
+import com.jms.cleanse.net.NettyClient;
 import com.jms.cleanse.presenter.ServerListPresenter;
 import com.jms.cleanse.services.MyService_verify;
 import com.zhy.adapter.recyclerview.CommonAdapter;
@@ -106,6 +107,9 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
         if ("false".equals(isLock)) {                                                       //无密码登录(跳转至LaunchActivity页面)
             TCP_CONN.isSendReconn = true;               //是否开启重连
             TCP_CONN.loopMark = true;                   //开启TCP主循环;
+            TCP_CONN.reconnTime = 2000L;
+            // 用另外的service来替换之前的tcp
+//            NettyClient.getInstance().connect();
             startService(new Intent(this, MyService_verify.class));
             startActivity(new Intent(ServerListActivity.this, RobotMasterActivity.class));
             this.finish();

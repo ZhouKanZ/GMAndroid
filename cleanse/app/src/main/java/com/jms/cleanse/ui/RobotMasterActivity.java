@@ -131,6 +131,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     private int size = -1;     // 任务点的长度
     private int goneTimes = 0; //到达的次数
     private int state = 1; // 0 1 present the state of control 0:auto 1:manu
+    private int range = 8;// 表示角度的浮动范围
 
     @Override
     protected RobotMasterPresenter loadPresenter() {
@@ -749,13 +750,35 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
     /**
-     * @param angle  角度[0,360)
+     * @param angle  角度[0,360)  角度和android坐标系相同 ps：在正方向的左右5度之间 当作正方向来处理
      * @param length [0,R-r]
      */
     @Override
     public void change(double angle, float length) {
 
+        Log.d(TAG, "change: "+angle);
+        // 设置精确度
         DecimalFormat df = new DecimalFormat("#0.000");
+
+        // 当作0
+        if (angle < range || angle > 360 - range){
+            angle = 0;
+        }
+
+        // 当作0
+        if (angle  <90+ range && angle > 90-range){
+            angle = 90;
+        }
+
+        // 当作0
+        if (angle  <180+ range && angle > 180-range){
+            angle = 180;
+        }
+
+        // 当作0
+        if (angle  <270+ range && angle > 270-range){
+            angle = 270;
+        }
 
         // 机器人的线速度 vx
         speed[0] = Double.valueOf(df.format(-Math.sin(convertAngleToRadians(angle)) * length * RobotConfig.MAX_VEL));
@@ -763,6 +786,10 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         speed[1] = 0;
         // 机器人的角速度
         speed[2] = Double.valueOf(df.format(-Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED));
+
+
+
+
 
 
     }

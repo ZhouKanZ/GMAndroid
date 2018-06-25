@@ -14,6 +14,7 @@ import com.jms.cleanse.bean.MSG_TYPE;
 import com.jms.cleanse.bean.MotorOnOff;
 import com.jms.cleanse.contract.RobotMasterContract;
 import com.jms.cleanse.entity.map.MapTabSpec;
+import com.jms.cleanse.net.NettySend;
 import com.jms.cleanse.presenter.status.RunContext;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.presenter.status.RunTimeState;
@@ -55,7 +56,6 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     private MotorOnOff motorOnOff = new MotorOnOff("off");
     private RunContext runContext = new RunContext();
 
-
     private List<MapTabSpec> mapTabSpecs;
 
     @Override
@@ -93,7 +93,7 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(along ->
-                        APPSend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2]), e -> Log.d(TAG, "doLoopSendMove: " + e.toString())
+                        APPSend.sendMove(LoginEntity.robotMac,getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2])/*NettySend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2])*/, e -> Log.d(TAG, "doLoopSendMove: " + e.toString())
                 );
 
     }

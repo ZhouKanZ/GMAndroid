@@ -13,6 +13,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 
 public class NettyClient {
 
@@ -27,8 +28,7 @@ public class NettyClient {
     private ArrayBlockingQueue<String> sendQueue = new ArrayBlockingQueue<String>(5000);
     private boolean sendFlag = true;
     private SendThread sendThread = new SendThread();
-    private String ip= "";
-    private int port;
+    private int port = 6789;
 
     private int connectState = DISCONNECTION;
     private boolean flag = true;
@@ -44,12 +44,8 @@ public class NettyClient {
         return nettyClient;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
+    public ChannelFuture getChannelFuture() {
+        return channelFuture;
     }
 
     private NettyClient() {
@@ -110,7 +106,7 @@ public class NettyClient {
     public void connect() {
         if (getConnectState() != CONNECTED) {
             setConnectState(CONNECTING);
-            ChannelFuture f = bootstrap.connect("192.168.1.128", 6789);
+            ChannelFuture f = bootstrap.connect(LoginEntity.serverIP, port);
             f.addListener(listener);
         }
     }
