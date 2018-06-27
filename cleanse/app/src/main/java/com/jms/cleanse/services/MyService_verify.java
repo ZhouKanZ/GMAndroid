@@ -4,6 +4,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import java.io.IOException;
+
 import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
@@ -16,6 +18,7 @@ import robot.boocax.com.sdkmodule.setlog.SetLog;
  */
 
 public class MyService_verify extends Service {
+
     public MyService_verify() {
 
     }
@@ -38,7 +41,6 @@ public class MyService_verify extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         new Thread(new KEEPCONN()).start();
         return super.onStartCommand(intent, flags, startId);
     }
@@ -54,14 +56,29 @@ public class MyService_verify extends Service {
 
             APPSend.initFiles(getApplicationContext());         // 初始化文件目录,存放服务器发来的文件;
             if (null != LoginEntity.serverIP) {
-//                SetLog.recvJson_Debug = true;                   // 开启conn bug
+
+                // avoid start multiple thread keep TCP
+                if (TCP_CONN.channel != null && TCP_CONN.channel.isConnected()){
+                    try {
+                        TCP_CONN.channel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 TCP_CONN.doTCPLoop(LoginEntity.serverIP,
                         LoginEntity.user_name, LoginEntity.password, LoginEntity.salt, true);
                 //建立TCP长连接,参数依次为:服务器IP,用户名(可为null),密码(可为null),盐(可为null),boolean(是否自动请求文件);
             } else {
                 // 不可能为空
             }
-
         }
+    }
+
+    /**
+     *  需要确保仅仅只有一个实例在运行
+     */
+    public static void startService(){
+
     }
 }

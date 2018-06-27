@@ -1,9 +1,11 @@
 package com.jms.cleanse.ui;
 
 import android.animation.ObjectAnimator;
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
@@ -11,6 +13,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -31,8 +35,10 @@ import com.jms.cleanse.entity.file.POIJson;
 import com.jms.cleanse.entity.file.POIPoint;
 import com.jms.cleanse.entity.file.POITask;
 import com.jms.cleanse.entity.map.MapTabSpec;
+import com.jms.cleanse.entity.robot.LocalPath;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
 import com.jms.cleanse.util.FileUtil;
+import com.jms.cleanse.widget.AngleWheelView;
 import com.jms.cleanse.widget.BatteryBar;
 import com.jms.cleanse.widget.JMMapView;
 import com.jms.cleanse.widget.MapSelectPopupWindow;
@@ -68,9 +74,11 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Loc_status;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Local_path;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Move_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Real_path;
 import robot.boocax.com.sdkmodule.utils.sdk_utils.SendUtil;
 
 import static com.jms.cleanse.bean.CustomCommandKt.appendCustomCommand;
@@ -123,6 +131,12 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     ImageView ibRecorderList;
     @BindView(R.id.cancel)
     ImageView cancel;
+    @BindView(R.id.goal)
+    ImageView goal;
+    @BindView(R.id.btn_ensure)
+    Button btnEnsure;
+
+    private Matrix matrix = new Matrix();
 
     private All_map_info allMapInfo;
     private List<MapTabSpec> mapTabSpecs;
@@ -130,8 +144,16 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     private double[] speed = new double[3];
     private int size = -1;     // 任务点的长度
     private int goneTimes = 0; //到达的次数
-    private int state = 1; // 0 1 present the state of control 0:auto 1:manu
+    private int state = 1; // 0 1 present the state of control 0:auto 1:manu 2:navigate single point
     private int range = 8;// 表示角度的浮动范围
+
+    /* single navigation task */
+    private Button btn;
+    private ImageView imageView;
+    private ImageView imageView2;
+    private AngleWheelView angleWheel;
+
+    private Dialog singlePointDialog;
 
     @Override
     protected RobotMasterPresenter loadPresenter() {
@@ -179,6 +201,82 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 //                progressBar.show();
             }
         });
+
+        // raise dialog
+        btnEnsure.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                raiseDialog();
+            }
+        });
+
+        initDialog();
+
+    }
+
+    /**
+     * init single task dialog
+     */
+    private void initDialog() {
+
+        singlePointDialog = new Dialog(this);
+        singlePointDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        singlePointDialog.setContentView(R.layout.dialog_single_point);
+
+        btn = singlePointDialog.findViewById(R.id.button);
+        imageView = singlePointDialog.findViewById(R.id.imageView);
+        imageView2 = singlePointDialog.findViewById(R.id.imageView2);
+        angleWheel = singlePointDialog.findViewById(R.id.angleWheelView);
+
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                angleWheel.addAngle();
+            }
+        });
+
+        imageView2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                angleWheel.subAngle();
+            }
+        });
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // add point to screen
+                mapView.addPoint(true, 0, 0);
+                // get the position in real Coordinate-System
+                float[] centerPos = mapView.getCenterPosition();
+                // on btn click to the aim point
+                Observable.just(LoginEntity.robotMac)
+                        .subscribeOn(AndroidSchedulers.mainThread())
+                        .observeOn(Schedulers.io())
+                        .subscribe(new Consumer<String>() {
+                            @Override
+                            public void accept(String s) throws Exception {
+                                Log.d(TAG, "accept: " + centerPos[0] + " == " + centerPos[1]);
+                                APPSend.sendCommand_goal(s, centerPos[0], centerPos[1], angleWheel.getCurrentAngle());
+                            }
+                        }, e -> e.printStackTrace());
+                singlePointDialog.dismiss();
+                // dismiss the flag placed the point
+                mapView.disFlag();
+                // mapView.setTaskEditing(false);
+                btnEnsure.setVisibility(View.GONE);
+                // set mode
+                state = 2;
+                switchMode(2);
+            }
+        });
+
+    }
+
+    private void raiseDialog() {
+        if (singlePointDialog != null && !singlePointDialog.isShowing()) {
+            singlePointDialog.show();
+        }
     }
 
     @Override
@@ -187,7 +285,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    @OnClick({R.id.ib_task_list, R.id.ib_map_list, R.id.iv_urgent, R.id.reset, R.id.ib_plan_list, R.id.ib_recorder_list,R.id.cancel})
+    @OnClick({R.id.ib_task_list, R.id.ib_map_list, R.id.iv_urgent, R.id.reset, R.id.ib_plan_list, R.id.ib_recorder_list, R.id.cancel, R.id.goal})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.ib_task_list:
@@ -208,7 +306,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
                 break;
             case R.id.iv_urgent:
-                    taskFinished();
+                taskFinished();
                 break;
             case R.id.reset:
 
@@ -230,18 +328,29 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 }
 
             case R.id.cancel:
-
-//              if (stateJudge() == 1) {
-//                    // 跳转至日志页面
                 mPresenter.cancelGoal();
                 state = 1;
-//               }
+                break;
+            case R.id.goal:
+                if (stateJudge() == 1){
+                    // turn to single position navigation mode!
+                    state = 2;
+                    mapView.setTaskEditing(true);
+                    mapView.enableFlag();
+                    // visible the ensure button
+                    btnEnsure.setVisibility(View.VISIBLE);
+//                    goal.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.cancel_goal));
+                }
                 break;
         }
     }
 
+    /**
+     * only state equal 1 can control other component
+     * @return
+     */
     private int stateJudge() {
-        if (state == 0) {
+        if (state == 0 || state == 2) {
             Toast.makeText(RobotMasterActivity.this, "operation is not allowed on current mode !", Toast.LENGTH_SHORT).show();
         }
         return state;
@@ -394,6 +503,13 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                         size = -1;
                         state = 1;
                     }
+
+                    if (state == 2){
+                        switchMode(0);
+                        clearPath();
+                        state = 1;
+                    }
+
                     tvLoc.setTextColor(getResources().getColor(R.color.info));
                     tvLoc.setText("导航完成");
                     break;
@@ -536,8 +652,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mapTabSpecs = mPresenter.getAllThumbnailMaps(thumbnailCache);
         if (mapTabSpecs.size() == allMapInfo.getAll_map_info().size()) {
             popupWindow.notifyAdapter(mapTabSpecs);
-        } else {
-
         }
 
     }
@@ -569,6 +683,21 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                         Log.i(TAG, "update charge error " + throwable.getMessage());
                     }
                 });
+    }
+
+    @Subscribe(threadMode = ThreadMode.POSTING)
+    public void getLocalPath(Local_path localPath){
+        if (localPath != null){
+            mapView.setLocalPath(localPath.getLocal_path_info());
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.POSTING)
+    public void getRealPath(Real_path realPath){
+        if (realPath != null){
+            Log.d(TAG, "getRealPath: " + realPath.getReal_path_info().size());
+            mapView.setRealPath(realPath.getReal_path_info());
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -686,11 +815,15 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     private void switchMode(int mode) {
         if (mode == 0) {
             tvMasterModel.setText(R.string.manualMode);
-        } else {
+        }
+        if (mode == 1) {
+            tvMasterModel.setText(R.string.automaticMode);
+        }
+
+        if (mode == 2){
             tvMasterModel.setText(R.string.automaticMode);
         }
     }
-
 
     /**
      * @param enable
@@ -756,27 +889,27 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     @Override
     public void change(double angle, float length) {
 
-        Log.d(TAG, "change: "+angle);
+        Log.d(TAG, "change: " + angle);
         // 设置精确度
         DecimalFormat df = new DecimalFormat("#0.000");
 
         // 当作0
-        if (angle < range || angle > 360 - range){
+        if (angle < range || angle > 360 - range) {
             angle = 0;
         }
 
         // 当作0
-        if (angle  <90+ range && angle > 90-range){
+        if (angle < 90 + range && angle > 90 - range) {
             angle = 90;
         }
 
         // 当作0
-        if (angle  <180+ range && angle > 180-range){
+        if (angle < 180 + range && angle > 180 - range) {
             angle = 180;
         }
 
         // 当作0
-        if (angle  <270+ range && angle > 270-range){
+        if (angle < 270 + range && angle > 270 - range) {
             angle = 270;
         }
 
@@ -786,10 +919,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         speed[1] = 0;
         // 机器人的角速度
         speed[2] = Double.valueOf(df.format(-Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED));
-
-
-
-
 
 
     }

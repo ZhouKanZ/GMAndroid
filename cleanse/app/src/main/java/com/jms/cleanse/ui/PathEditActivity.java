@@ -168,13 +168,6 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
             }
         });
 
-//        isCleanse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                cleanseable = isChecked;
-//            }
-//        });
-
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -182,7 +175,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
                 String strTime = editText.getEditableText().toString();
                 if (!TextUtils.isEmpty(strTime)) {
                     long time = Long.valueOf(strTime);
-                    mapView.addPoint(cleanseable, time, angleWheelView.getCurrentAngle());
+                    mapView.addPoint(time != 0, time, angleWheelView.getCurrentAngle());
                     editDialog.dismiss();
                 } else {
                     Toast.makeText(PathEditActivity.this, "停留时间不可为空", Toast.LENGTH_SHORT).show();
@@ -216,7 +209,7 @@ public class PathEditActivity extends BaseActivity<PathEditPresenter> implements
         }
 
         if (TextUtils.isEmpty(name)) {
-            Toast.makeText(this, "朋友！您忘记给它命名了", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "不要忘记给它命名了", Toast.LENGTH_SHORT).show();
         } else {
             taskName = name;
             current_mode = MODE_LIST;

@@ -43,7 +43,6 @@
         android:layout_marginBottom="19dp"
         />
 
-
     <!-- 右侧设置栏 -->
     <LinearLayout
         android:id="@+id/layout_right_sider"
@@ -137,6 +136,28 @@
         android:layout_marginBottom="10dp"
         />
 
+    <ImageView
+        android:id="@+id/goal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/goalto"
+        android:layout_marginLeft="20dp"
+        android:layout_above="@+id/cancel"
+        android:layout_marginBottom="10dp"
+        />
 
+    <Button
+        android:id="@+id/btn_ensure"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="前往该点"
+        android:visibility="gone"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/btn_task_start_selector"
+        android:textSize="@dimen/text_size_12sp"
+        android:textColor="@color/colorToolbarTitle"
+        />
 
 </RelativeLayout>

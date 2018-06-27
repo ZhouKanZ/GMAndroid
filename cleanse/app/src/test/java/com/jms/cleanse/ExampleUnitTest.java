@@ -1,5 +1,7 @@
 package com.jms.cleanse;
 
+import android.graphics.Matrix;
+
 import org.junit.Test;
 
 import io.reactivex.Observable;
@@ -43,5 +45,15 @@ public class ExampleUnitTest {
         str = str.replaceAll("(\\{|,)([^:]+)", "$1\"$2\"").replaceAll("([^:,\\}]+)(\\}|,)", "\"$1\"$2");
         System.out.println(str);
 
+    }
+
+    @Test
+    public void testMatrix() throws Exception{
+//        Matrix matrix = new Matrix();
+//        matrix.setTranslate(10,10);
+//        matrix.setRotate(45);
+//        matrix.setScale(1.0f,1.0f);
+//
+//        matrix.postConcat(matrix);
     }
 }

@@ -25,6 +25,10 @@ public class POIConfig {
     public static @ColorInt int pathColorCleanse = R.color.colorPathCleanse;
     // 非消毒路段颜色
     public static @ColorInt int pathColorUnCleanse = R.color.colorPathUnCleanse;
+    // local_path color
+    public static @ColorInt int localPathColor = R.color.colorPrimary;
+    // real path color
+    public static @ColorInt int realPathColor = R.color.colorPrimary;
     // 消毒路段的px
     public static int width = 10;
 

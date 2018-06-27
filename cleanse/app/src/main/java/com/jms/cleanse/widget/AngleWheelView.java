@@ -137,8 +137,17 @@ public class AngleWheelView extends View {
         String strAngle = str + "°";
         float dw = mPaint.measureText(strAngle, 0, strAngle.length()) / 2;
         float dh = (mPaint.descent() - mPaint.ascent()) / 2;
-        canvas.drawText(strAngle, (float) centerPos[0] - dw, (float) centerPos[1] + dh - mPaint.descent(), mPaint);
+        canvas.drawText(removeIrregularAngle(strAngle), (float) centerPos[0] - dw, (float) centerPos[1] + dh - mPaint.descent(), mPaint);
         canvas.restore();
+    }
+
+    /**
+     * remove irregular angle such as -180 -0
+     * @param strAngle
+     * @return
+     */
+    private String removeIrregularAngle(String strAngle) {
+        return strAngle.equals("-180°")?"-179°":strAngle.equals("-0°")?"0°":strAngle;
     }
 
     /**
