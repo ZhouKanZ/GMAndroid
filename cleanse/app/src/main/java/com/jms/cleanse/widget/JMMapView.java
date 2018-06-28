@@ -42,6 +42,7 @@ import java.util.List;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Local_path;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Real_path;
+import robot.boocax.com.sdkmodule.utils.init_files.InitFiles;
 
 /**
  * Created by zhoukan on 2018/3/28.
@@ -59,6 +60,8 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     private long startClickTime;
     private static int TIME_IN_FRAME = 30;                  // 刷新频率
 
+    // this paint is prepare for realPath and local_path
+    private Paint pathPaint;
     private Paint mPaint;
     private Canvas canvas;
     private SurfaceHolder holder;
@@ -72,6 +75,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     /* real_path && local_path */
     private List<Real_path.real_path_info> real_path_infos;
     private List<Local_path.local_path_info> local_path_infos;
+
 
     /************ 地图坐标系相关的配置 *************/
     private int coodinateX;
@@ -137,6 +141,14 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(5);
         mPaint.setStyle(Paint.Style.STROKE);
+
+        pathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        pathPaint.setColor(Color.GREEN);
+        pathPaint.setStrokeCap(Paint.Cap.ROUND);
+        pathPaint.setStrokeWidth(4);
+        pathPaint.setStyle(Paint.Style.STROKE);
+
+
 
         testPOIS = new ArrayList<>();
         paths = new LinkedList<>();
@@ -306,18 +318,25 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
             // 1.change real point to android point
             double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(lp.getX(), lp.getY(), coodinateX, coodinateY);
             // draw points
-            canvas.drawPoint((float) androidRobotPos[0],(float)androidRobotPos[1],mPaint);
+            canvas.drawPoint((float) androidRobotPos[0],(float)androidRobotPos[1],pathPaint);
         }
 
-        Path p = new Path();
-        for (Real_path.real_path_info rp :
-                real_path_infos) {
-            // change real point to android point
-            double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(rp.getX(), rp.getY(), coodinateX, coodinateY);
-            // draw path
-            p.lineTo((float)androidRobotPos[0],(float)androidRobotPos[1]);
+//        Path p = new Path();
+//        for (Real_path.real_path_info rp :
+//                real_path_infos) {
+//            // change real point to android point
+//            double[] androidRobotPos = DisplayUtil.getAndroidCoordinate(rp.getX(), rp.getY(), coodinateX, coodinateY);
+//            // draw path
+//            p.lineTo((float)androidRobotPos[0],(float)androidRobotPos[1]);
+//        }
+//        p.reset();
+
+        for (int i = 0; i < real_path_infos.size(); i++) {
+            Real_path.real_path_info realPoint = real_path_infos.get(i);
+//            double[] currentPoi = poiPoint.getAndroidCoordinate(coodinateX, coodinateY);
+            double[] currentPoi = DisplayUtil.getAndroidCoordinate(realPoint.getX(), realPoint.getY(), coodinateX, coodinateY);
+            canvas.drawPoint((float) currentPoi[0],(float)currentPoi[1],pathPaint);
         }
-        p.reset();
     }
 
     /**
@@ -518,11 +537,19 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     }
 
     public void setLocalPath(List<Local_path.local_path_info> local_path_info) {
+        if (local_path_info == null){
+            local_path_infos.clear();
+            return;
+        }
         local_path_infos.clear();
         local_path_infos.addAll(local_path_info);
     }
 
     public void setRealPath(List<Real_path.real_path_info> real_path_info) {
+        if (real_path_info == null){
+            real_path_infos.clear();
+            return;
+        }
         real_path_infos.clear();
         real_path_infos.addAll(real_path_info);
     }

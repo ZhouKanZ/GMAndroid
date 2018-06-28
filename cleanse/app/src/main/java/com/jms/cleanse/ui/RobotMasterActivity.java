@@ -64,6 +64,7 @@ import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.analysis_data.RealPath;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.Map_param;
@@ -332,6 +333,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                 state = 1;
                 break;
             case R.id.goal:
+
                 if (stateJudge() == 1){
                     // turn to single position navigation mode!
                     state = 2;
@@ -339,8 +341,20 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                     mapView.enableFlag();
                     // visible the ensure button
                     btnEnsure.setVisibility(View.VISIBLE);
-//                    goal.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.cancel_goal));
+                    goal.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.cancel_goal));
+                    return;
                 }
+
+                if (state == 2){
+                    // exit single point navigation
+                    // state - manu
+                    state = 1;
+                    btnEnsure.setVisibility(View.GONE);
+                    mapView.setTaskEditing(false);
+                    goal.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.goalto));
+                    return;
+                }
+
                 break;
         }
     }
@@ -350,7 +364,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
      * @return
      */
     private int stateJudge() {
-        if (state == 0 || state == 2) {
+        if (state == 0 /*|| state == 2*/) {
             Toast.makeText(RobotMasterActivity.this, "operation is not allowed on current mode !", Toast.LENGTH_SHORT).show();
         }
         return state;
@@ -508,6 +522,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                         switchMode(0);
                         clearPath();
                         state = 1;
+                        mapView.setLocalPath(null);
+                        mapView.setRealPath(null);
+                        goal.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.goalto));
                     }
 
                     tvLoc.setTextColor(getResources().getColor(R.color.info));
@@ -936,6 +953,11 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         }
 
         mPresenter.cancelLoop();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override

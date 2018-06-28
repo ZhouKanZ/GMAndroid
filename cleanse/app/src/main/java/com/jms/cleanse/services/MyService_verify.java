@@ -56,7 +56,6 @@ public class MyService_verify extends Service {
 
             APPSend.initFiles(getApplicationContext());         // 初始化文件目录,存放服务器发来的文件;
             if (null != LoginEntity.serverIP) {
-
                 // avoid start multiple thread keep TCP
                 if (TCP_CONN.channel != null && TCP_CONN.channel.isConnected()){
                     try {
@@ -65,7 +64,7 @@ public class MyService_verify extends Service {
                         e.printStackTrace();
                     }
                 }
-
+                SetLog.recvJson_Debug = true;
                 TCP_CONN.doTCPLoop(LoginEntity.serverIP,
                         LoginEntity.user_name, LoginEntity.password, LoginEntity.salt, true);
                 //建立TCP长连接,参数依次为:服务器IP,用户名(可为null),密码(可为null),盐(可为null),boolean(是否自动请求文件);
