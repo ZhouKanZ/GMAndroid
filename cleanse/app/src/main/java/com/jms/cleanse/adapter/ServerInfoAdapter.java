@@ -76,11 +76,13 @@ public class ServerInfoAdapter extends BaseAdapter<ServerEntity> {
         });
     }
 
+
     private void OnbindNodataViewHolder(NoDataViewHolder holder, int position) {
-        Glide.with(ctz)
-                .load(R.drawable.waitudp)
-                .into(holder.ivGif);
+//        Glide.with(ctz)
+//                .load(R.drawable.waitudp)
+//                .into(holder.ivGif);
     }
+
 
     @Override
     public int getItemCount() {

@@ -33,4 +33,7 @@
     <dimen name="text_size_18sp">18sp</dimen>
 
 
+    <dimen name="tool_item_width">175dp</dimen>
+
+
 </resources>

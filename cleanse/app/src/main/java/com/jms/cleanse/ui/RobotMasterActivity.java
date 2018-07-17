@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Gravity;
@@ -35,7 +34,6 @@ import com.jms.cleanse.entity.file.POIJson;
 import com.jms.cleanse.entity.file.POIPoint;
 import com.jms.cleanse.entity.file.POITask;
 import com.jms.cleanse.entity.map.MapTabSpec;
-import com.jms.cleanse.entity.robot.LocalPath;
 import com.jms.cleanse.presenter.RobotMasterPresenter;
 import com.jms.cleanse.util.FileUtil;
 import com.jms.cleanse.widget.AngleWheelView;
@@ -54,7 +52,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -64,7 +61,7 @@ import io.reactivex.schedulers.Schedulers;
 import robot.boocax.com.sdkmodule.APPSend;
 import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
-import robot.boocax.com.sdkmodule.entity.entity_sdk.analysis_data.RealPath;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.analysis_data.LaserEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.All_map_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ExistMap;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.Map_param;
@@ -74,12 +71,14 @@ import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.TempMapBytes;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.ThumbnailCache;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.All_file_info;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Charge_status;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Laser;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Loc_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Local_path;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Move_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.OBD;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Real_path;
+import robot.boocax.com.sdkmodule.utils.sdk_utils.LaserJsonUtil;
 import robot.boocax.com.sdkmodule.utils.sdk_utils.SendUtil;
 
 import static com.jms.cleanse.bean.CustomCommandKt.appendCustomCommand;
@@ -156,6 +155,7 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
     private Dialog singlePointDialog;
 
+
     @Override
     protected RobotMasterPresenter loadPresenter() {
         return new RobotMasterPresenter();
@@ -171,6 +171,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         mPresenter.initData();
         mapTabSpecs = new ArrayList<>();
         popupWindow = new MapSelectPopupWindow(this);
+        // for phone
+//        switchUpperComputer.setVisibility(View.GONE);
+//        layoutRightSider.setVisibility(View.GONE);
     }
 
     @Override
@@ -420,6 +423,36 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
     }
 
     /**
+     *  get laser data from server and drawing it on map
+     */
+    @Subscribe(threadMode = ThreadMode.POSTING)
+    public void getLaser(Laser laser){
+        if (laser != null){
+
+            List<Double> headList = LaserJsonUtil.getHead(laser.getHead());
+            List<Integer> iList = LaserJsonUtil.getData(laser.getData());
+            System.out.println("=== list ===");
+            for (int i = 0; i < iList.size(); i++) {
+                System.out.print("===="+iList.get(i)+"===");
+            }
+            List<Double> dataList = LaserJsonUtil.getDealData(iList);
+
+            LaserEntity laserEntity = new LaserEntity();
+            laserEntity.setHeadList(headList);
+            laserEntity.setDistanceList(dataList);
+            laserEntity.setOriList(iList);
+            if(laser.getPose() != null) {
+                laserEntity.setLaser_pos_x(laser.getPose().getX());
+                laserEntity.setLaser_pos_y(laser.getPose().getY());
+                laserEntity.setLaser_pos_yaw(laser.getPose().getYaw());
+                laserEntity.setThisAngle(((Double)headList.get(0)).doubleValue() + laser.getPose().getYaw());
+            }
+            mapView.setLaserEntity(laserEntity);
+        }
+    }
+
+
+    /**
      * SDK传来是否有地图可供显示.
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -478,8 +511,9 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
                     tvPos.setText("尝试定位");
                     break;
                 case 2:// 还未构建地图无法定位
+                    //
                     break;
-                case 3:// 正在构建地图中
+                case 3:// 正在构建地图中  开始建图的标志
                     break;
                 case 4:// UWB错误
                     break;
@@ -937,7 +971,6 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
         // 机器人的角速度
         speed[2] = Double.valueOf(df.format(-Math.cos(convertAngleToRadians(angle)) * RobotConfig.MAX_ANGULAR_SPEED));
 
-
     }
 
     @Override
@@ -945,11 +978,10 @@ public class RobotMasterActivity extends BaseActivity<RobotMasterPresenter>
 
         for (int i = 0; i <= 3; i++) {
             Observable.just(speed)
+                    .delay(1,TimeUnit.SECONDS)
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
-                    .subscribe(s ->
-                            APPSend.sendMove(LoginEntity.robotMac, 0, 0, 0), e -> {
-                    });
+                    .subscribe(s -> APPSend.sendMove(LoginEntity.robotMac, 0, 0, 0), e -> {});
         }
 
         mPresenter.cancelLoop();

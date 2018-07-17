@@ -28,9 +28,10 @@
             android:windowSoftInputMode="adjustPan">
 
         </activity>
+        <!--android:screenOrientation="landscape"-->
         <activity
             android:name=".ui.LoginActivity"
-            android:screenOrientation="landscape"
+
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -57,7 +58,12 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
-        <service android:name=".services.MyService_verify" />
+        <service android:name=".services.MyService_verify">
+            <intent-filter>
+                <action android:name="android.intent.action.MyService_verify">
+                </action>
+            </intent-filter>
+        </service>
 
 
     </application>

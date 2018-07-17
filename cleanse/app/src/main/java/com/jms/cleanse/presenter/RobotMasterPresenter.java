@@ -56,6 +56,8 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     private MotorOnOff motorOnOff = new MotorOnOff("off");
     private RunContext runContext = new RunContext();
 
+    private int a=0;
+
     private List<MapTabSpec> mapTabSpecs;
 
     @Override
@@ -87,13 +89,18 @@ public class RobotMasterPresenter extends BasePresenter<RobotMasterContract.View
     @Override
     public void doLoopSendMove() {
 
+        a = 0;
         // 间隔100ms发一次指令
         loopDispose = Observable
                 .interval(200, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(along ->
-                        APPSend.sendMove(LoginEntity.robotMac,getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2])/*NettySend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2])*/, e -> Log.d(TAG, "doLoopSendMove: " + e.toString())
+                .subscribe(along ->{
+                            APPSend.sendMove(LoginEntity.robotMac,getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2]);/*NettySend.sendMove(LoginEntity.robotMac, getView().getSpeed()[0], getView().getSpeed()[1], getView().getSpeed()[2])*/
+                            a++;
+                            Log.d(TAG, "doLoopSendMove: "+a);
+                        }
+                    , e -> Log.d(TAG, "doLoopSendMove: " + e.toString())
                 );
 
     }

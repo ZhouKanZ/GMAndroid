@@ -3,6 +3,7 @@ package com.jms.cleanse.ui;
 import android.content.Intent;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -15,6 +16,7 @@ import com.jms.cleanse.entity.robot.ServerEntity;
 import com.jms.cleanse.net.NettyClient;
 import com.jms.cleanse.presenter.ServerListPresenter;
 import com.jms.cleanse.services.MyService_verify;
+import com.jms.cleanse.services.ServiceUtils;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
 
@@ -26,6 +28,7 @@ import robot.boocax.com.sdkmodule.TCP_CONN;
 import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.for_app.UDPList;
 import robot.boocax.com.sdkmodule.setlog.SetLog;
+import robot.boocax.com.sdkmodule.utils.init_files.InitFiles;
 import robot.boocax.com.sdkmodule.utils.logutil.LogUtils;
 
 
@@ -110,7 +113,19 @@ public class ServerListActivity extends BaseActivity<ServerListPresenter> implem
             TCP_CONN.reconnTime = 2000L;
             // 用另外的service来替换之前的tcp
 //            NettyClient.getInstance().connect();
-            startService(new Intent(this, MyService_verify.class));
+
+            Intent intent = new Intent();
+            intent.setAction("android.intent.action.MyService_verify");
+            intent.setPackage("com.jms.cleanse");
+            boolean isRunning =  ServiceUtils.isMyServiceRunning(MyService_verify.class);
+            // 如果正在运行的话，就停止service
+            if (isRunning){
+                stopService(intent);
+            }
+
+            Log.d(TAG, "jumpToRobotMaster: " + isRunning);
+
+            startService(intent);
             startActivity(new Intent(ServerListActivity.this, RobotMasterActivity.class));
             this.finish();
         } else if ("true".equals(isLock)) {                                                 //有密码登录(跳转至SignActivity页面)

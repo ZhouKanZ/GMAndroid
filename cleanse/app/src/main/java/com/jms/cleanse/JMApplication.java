@@ -42,20 +42,6 @@ public class JMApplication extends Application {
 //        myCrashHandler.init(getApplicationContext());
     }
 
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
-        // app 关闭
-        if (TCP_CONN.channel.isConnected()){
-            try {
-                TCP_CONN.channel.close();
-                stopService(new Intent(this, MyService_verify.class));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public static BoxStore getBoxStore() {
         return boxStore;
     }

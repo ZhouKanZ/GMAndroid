@@ -39,10 +39,15 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
+import robot.boocax.com.sdkmodule.entity.entity_app.LoginEntity;
+import robot.boocax.com.sdkmodule.entity.entity_sdk.analysis_data.LaserEntity;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Local_path;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Pos_vel_status;
 import robot.boocax.com.sdkmodule.entity.entity_sdk.from_server.Real_path;
+import robot.boocax.com.sdkmodule.utils.coordinateutils.coordinateTranslate.PhytoBmp;
 import robot.boocax.com.sdkmodule.utils.init_files.InitFiles;
+
+import static robot.boocax.com.sdkmodule.surface.surfaceview.SurfaceViewLaser.getIncre;
 
 /**
  * Created by zhoukan on 2018/3/28.
@@ -62,7 +67,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
 
     // this paint is prepare for realPath and local_path
     private Paint pathPaint;
-    private Paint mPaint;
+    private Paint mPaint,mPaint1,mPaint2;
     private Canvas canvas;
     private SurfaceHolder holder;
     private Thread t;
@@ -75,7 +80,8 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     /* real_path && local_path */
     private List<Real_path.real_path_info> real_path_infos;
     private List<Local_path.local_path_info> local_path_infos;
-
+    /* laser layer */
+    private LaserEntity laserEntity;
 
     /************ 地图坐标系相关的配置 *************/
     private int coodinateX;
@@ -87,7 +93,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
     private Bitmap robotMap;
     private Bitmap map;
     //    private Bitmap localPathRes;
-//    private Bitmap realPathRes;
+    //    private Bitmap realPathRes;
     private int local_path_point_width = 5;
     private int real_path_point_width = 2;
 
@@ -148,6 +154,19 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         pathPaint.setStrokeWidth(4);
         pathPaint.setStyle(Paint.Style.STROKE);
 
+        mPaint1 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint1.setStyle(Paint.Style.STROKE);
+        mPaint1.setStrokeWidth(0.5F);
+        mPaint1.setStrokeCap(Paint.Cap.ROUND);
+        mPaint1.setStrokeJoin(Paint.Join.ROUND);
+
+
+        mPaint2.setStyle(Paint.Style.STROKE);
+        mPaint2.setStrokeWidth(1.2F);
+        mPaint2.setStrokeCap(Paint.Cap.ROUND);
+        mPaint2.setStrokeJoin(Paint.Join.ROUND);
+
 
 
         testPOIS = new ArrayList<>();
@@ -171,7 +190,8 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         controller = new GestureController(this);
         controller.getSettings()
                 .setMaxZoom(6f)
-                .setDoubleTapZoom(3f);
+                .setDoubleTapZoom(3f)
+                .disableBounds();
 
         controller.addOnStateChangeListener(new GestureController.OnStateChangeListener() {
             @Override
@@ -296,6 +316,7 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
                     drawPoi();
                     drawRobot();
                     drawLocalAndRealPath();
+//                    drawLaser();
                     canvas.restore();
                     drawCenterFlag();
                 }
@@ -307,6 +328,35 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
                 }
             }
         }
+    }
+
+    private void drawLaser() {
+
+        if(laserEntity != null) {
+            for(int i = 0; i < laserEntity.getDistanceList().size(); ++i) {
+                //                // 1.终点
+                //                getIncre(((Double)laserEntity.getDistanceList().get(i)).doubleValue(), laserEntity);
+                //                double[] end = DisplayUtil.getAndroidCoordinate(laserEntity.getLaserPointX(), laserEntity.getLaserPointY(), coodinateX, coodinateY);
+                //                // 2.起点
+                //                double[] startPos = DisplayUtil.getAndroidCoordinate(laserEntity.getLaser_pos_x(), laserEntity.getLaser_pos_y(), coodinateX, coodinateY);
+                //
+                //                Log.d(TAG, "drawLaser: start :（" + (float)startPos[0]+","+(float)startPos[1]+")");
+                //                Log.d(TAG, "drawLaser: end :（" + (float)end[0]+","+(float)end[1]+")");
+                //                // 3.转换成像素坐标点
+                //                List<Float> endPointResult   = PhytoBmp.getResult((float)laserEntity.getLaserPointX(), (float)laserEntity.getLaserPointY());
+                //                canvas.drawLine((float) startPos[0],(float)startPos[1],(float)end[0],(float)end[1], mPaint1);
+                //                canvas.drawPoint(((Float)endPointResult.get(0)).floatValue(), ((Float)endPointResult.get(1)).floatValue(), mPaint2);
+                getIncre(((Double)laserEntity.getDistanceList().get(i)).doubleValue(), laserEntity);
+//                List<Float> startPointResult = DisplayUtil.getAndroidCoordinate(laserEntity.getLaser_pos_x(), laserEntity.getLaser_pos_y(), coodinateX, coodinateY);
+                // 雷达位置
+                double[] startPos = DisplayUtil.getAndroidCoordinate(laserEntity.getLaser_pos_x(), laserEntity.getLaser_pos_y(), coodinateX, coodinateY);
+                double[] endPos =   DisplayUtil.getAndroidCoordinate(laserEntity.getLaserPointX(), laserEntity.getLaserPointY(), coodinateX, coodinateY);
+//                List<Float> endPointResult = PhytoBmp.getResult((float)laserEntity.getLaserPointX(), (float)laserEntity.getLaserPointY());
+                canvas.drawLine((float) startPos[0], (float) startPos[1], (float) endPos[0], (float) endPos[1], mPaint1);
+                canvas.drawPoint((float) endPos[0], (float) endPos[1], mPaint2);
+            }
+        }
+
     }
 
     /**
@@ -699,6 +749,10 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
         this.pos = pos;
     }
 
+    public void setLaserEntity(LaserEntity laserEntity) {
+        this.laserEntity = laserEntity;
+    }
+
     /**
      * bitmap 有效
      *
@@ -706,5 +760,12 @@ public class JMMapView extends SurfaceView implements SurfaceHolder.Callback, Ru
      */
     private boolean bitmapIsValid() {
         return map != null && map.getWidth() > 0 && map.getHeight() > 0;
+    }
+
+    // 计算终点的坐标
+    private void getIncre(double thisDis, LaserEntity laserEntity) {
+        laserEntity.setThisAngle(laserEntity.getThisAngle() + ((Double)laserEntity.getHeadList().get(2)).doubleValue());
+        laserEntity.setLaserPointX(laserEntity.getLaser_pos_x() + thisDis * Math.cos(laserEntity.getThisAngle()));
+        laserEntity.setLaserPointY(laserEntity.getLaser_pos_y() + thisDis * Math.sin(laserEntity.getThisAngle()));
     }
 }
